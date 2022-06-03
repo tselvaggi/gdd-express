@@ -1,13 +1,12 @@
 # DOCUMENTACION
 
-REFERENCIA DEL DER
+### REFERENCIA DEL DER
 
 - En rojo las tablas que fueron creadas por script (por ahora todas sin constraint)
 - En amarillo las tablas que cumplen rojo y se ideó un select para obtener las columnas y filas necesarias.
 - En verde las tablas que pudieron hacerse insert del select generado en amarillo.
 
 ### 31/05/2022
-
 - Se crearon los select que traen las tablas de parámetros
 - Se creó el script que genera todas las tablas. Admiten NULL en todas las filas y no están hechas las CONSTRAINTS (PK y FK).
 
