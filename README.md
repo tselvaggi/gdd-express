@@ -17,3 +17,4 @@
 ### 3/6/2022
 - TODO: Recordar que surgió idea de trigger para limitar la cantidad de autos que tiene una escudería.
 - TODO: Función que traiga id de tablas parametros.
+- Se migraron las tablas Auto, Escudería, Piloto, Carrera, Circuito y Sector (+ tablas parametros que necesite c/u)
