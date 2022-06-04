@@ -142,7 +142,7 @@ FOREIGN KEY (CIRCUITO_PAIS_ID) REFERENCES GDD_EXPRESS.Pais (PAIS_ID)
 
 CREATE TABLE GDD_EXPRESS.Sector_Tipo
 (
-SECTOR_TIPO_ID				int, --PK
+SECTOR_TIPO_ID				int IDENTITY(1,1), --PK
 SECTOR_TIPO_DETALLE			nvarchar(255),
 PRIMARY KEY (SECTOR_TIPO_ID)
 )
@@ -160,7 +160,7 @@ FOREIGN KEY (SECTOR_CIRCUITO_ID) REFERENCES GDD_EXPRESS.Circuito (CIRCUITO_ID)
 
 CREATE TABLE GDD_EXPRESS.Clima
 (
-CLIMA_ID				int, --PK
+CLIMA_ID				int IDENTITY(1,1), --PK
 CLIMA_DETALLE				nvarchar(100),
 PRIMARY KEY (CLIMA_ID)
 )
@@ -548,68 +548,91 @@ BEGIN
 END
 GO  
 
-IF OBJECT_ID('GDD_EXPRESS.migracion_circuitos_sectores', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_circuitos_sectores
+IF OBJECT_ID('GDD_EXPRESS.migracion_carrera', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_carrera
 GO
 
 GO
-CREATE PROCEDURE GDD_EXPRESS.migracion_circuitos_sectores
+CREATE PROCEDURE GDD_EXPRESS.migracion_carrera
 AS
 BEGIN
-	DECLARE c_escuderia CURSOR FOR
-		SELECT distinct ESCUDERIA_NOMBRE, ESCUDERIA_NACIONALIDAD FROM gd_esquema.Maestra
-		where ESCUDERIA_NOMBRE IS NOT NULL
-		
-	
-	CREATE TABLE #t_autos(
-		AUTO_MODELO nvarchar(255),
-		AUTO_NUMERO int,
-		ESCUDERIA_NOMBRE nvarchar(255)
-	)
+	DECLARE c_circuito_carrera CURSOR FOR
+		SELECT distinct CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_FECHA, CARRERA_CANT_VUELTAS, 
+		CIRCUITO_CODIGO, CIRCUITO_NOMBRE, CIRCUITO_PAIS FROM gd_esquema.Maestra
+
+
+
+	declare @id_pais int
+	declare @id_clima int
 
 	BEGIN TRY
 	BEGIN TRANSACTION
+		declare @codigo_carrera int
+		declare @carrera_clima varchar(100)
+		declare @carrera_fecha date
+		declare @carrera_cantidad_vueltas int
+		declare @circuito_codigo int
+		declare @circuito_nombre varchar(255)
+		declare @circuito_pais varchar(255)
 
-		INSERT INTO #t_autos
-			SELECT distinct m.AUTO_MODELO, m.AUTO_NUMERO, m.ESCUDERIA_NOMBRE FROM gd_esquema.Maestra m
-			where m.AUTO_MODELO IS NOT NULL
-
-		declare @escuderia_nombre nvarchar(255)
-		declare @escuderia_nacionalidad nvarchar(255)
-
-		OPEN c_escuderia
-		FETCH NEXT FROM c_escuderia INTO @escuderia_nombre, @escuderia_nacionalidad
+		OPEN c_circuito_carrera
+		FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
 		WHILE (@@FETCH_STATUS = 0)
 		BEGIN
-			declare @id_pais int
-			declare @id_escuderia int
-			declare @id_auto int
+			
+			
 
-			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @escuderia_nacionalidad)
+			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @circuito_pais)
 
-			INSERT INTO GDD_EXPRESS.Escuderia (ESCUDERIA_NOMBRE, ESCUDERIA_PAIS_ID)
-			VALUES (@escuderia_nombre, @id_pais)
+			INSERT INTO GDD_EXPRESS.Circuito(CIRCUITO_ID, CIRCUITO_NOMBRE, CIRCUITO_PAIS_ID)
+			VALUES (@circuito_codigo, @circuito_nombre, @id_pais)
 
-			SET @id_escuderia = @@IDENTITY
+			INSERT INTO GDD_EXPRESS.Carrera(CARRERA_ID, CARRERA_CLIMA_ID, CARRERA_FECHA, CARRERA_CANT_VUELTAS, CARRERA_CIRCUITO_ID)
+			VALUES (@codigo_carrera, @id_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo)
 
-			INSERT INTO GDD_EXPRESS.Auto (AUTO_MODELO, AUTO_NUMERO, AUTO_ESCUDERIA_ID)
-				SELECT ta.AUTO_MODELO, ta.AUTO_NUMERO, @id_escuderia FROM #t_autos ta
-				WHERE ta.ESCUDERIA_NOMBRE = (SELECT esc.ESCUDERIA_NOMBRE FROM GDD_EXPRESS.Escuderia esc
-				WHERE esc.ESCUDERIA_ID = @id_escuderia)
-
-			FETCH NEXT FROM c_escuderia INTO @escuderia_nombre, @escuderia_nacionalidad
+			
+			FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
 
 		END
 
-		CLOSE c_escuderia  
-		DEALLOCATE c_escuderia 
+		CLOSE c_circuito_carrera  
+		DEALLOCATE c_circuito_carrera 
+
+		
+		DECLARE c_sector CURSOR FOR
+		SELECT distinct CODIGO_SECTOR, SECTOR_DISTANCIA, SECTO_TIPO, CIRCUITO_CODIGO FROM gd_esquema.Maestra
+
+		declare @codigo_sector int
+		declare @sector_distancia decimal(18,2)
+		declare @sector_tipo varchar(255)
+		
+	
+		OPEN c_sector
+		FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
+		WHILE (@@FETCH_STATUS = 0)
+		BEGIN
+			declare @id_sector_tipo int
+
+			SET @id_sector_tipo = (select p.SECTOR_TIPO_ID from GDD_EXPRESS.Sector_Tipo p WHERE p.SECTOR_TIPO_DETALLE = @sector_tipo)
+
+			INSERT INTO GDD_EXPRESS.Sector(SECTOR_ID, SECTOR_DISTANCIA, SECTOR_TIPO_ID, SECTOR_CIRCUITO_ID)
+			VALUES (@codigo_sector, @sector_distancia, @id_sector_tipo, @circuito_codigo)
+
+			FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
+
+		END
+
+		CLOSE c_sector  
+		DEALLOCATE c_sector 
+
+
 	COMMIT TRANSACTION	
 	END TRY
 
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS AUTO, ESCUDERIA';
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
         THROW 50000, @errorDescripcion, 1
 	END CATCH
 		
@@ -619,10 +642,6 @@ GO
 EXECUTE GDD_EXPRESS.migracion_parametros;
 EXECUTE GDD_EXPRESS.migracion_autos_escuderias;
 EXECUTE GDD_EXPRESS.migracion_pilotos;
+EXECUTE GDD_EXPRESS.migracion_carrera;
 
-SELECT * FROM GDD_EXPRESS.Auto a
-inner join GDD_EXPRESS.Escuderia e on e.[ESCUDERIA_ID] = a.AUTO_ESCUDERIA_ID 
-
-SELECT * FROM GDD_EXPRESS.Piloto
-
-SELECT * FROM GDD_EXPRESS.Pais
+SELECT * FROM GDD_EXPRESS.Carrera
