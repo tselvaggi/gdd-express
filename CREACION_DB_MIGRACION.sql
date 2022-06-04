@@ -191,21 +191,21 @@ FOREIGN KEY (CARRERA_ID) REFERENCES GDD_EXPRESS.Carrera (CARRERA_ID)
 
 CREATE TABLE GDD_EXPRESS.Incidente_Tipo
 (
-INCIDENTE_TIPO_ID			int, --PK
+INCIDENTE_TIPO_ID			int IDENTITY(1,1), --PK
 INCIDENTE_TIPO_DETALLE			varchar(255),
 PRIMARY KEY (INCIDENTE_TIPO_ID)
 )
 
 CREATE TABLE GDD_EXPRESS.Incidente_Bandera
 (
-INCIDENTE_BANDERA_ID			int, --PK
+INCIDENTE_BANDERA_ID			int IDENTITY(1,1), --PK
 INCIDENTE_BANDERA_DETALLE		varchar(255),
 PRIMARY KEY (INCIDENTE_BANDERA_ID)
 )
 
 CREATE TABLE GDD_EXPRESS.Incidente
 (
-INCIDENTE_ID				int, --PK
+INCIDENTE_ID				int IDENTITY(1,1), --PK
 INCIDENTE_BANDERA_ID			int, --FK
 INCIDENTE_TIPO_ID			int, --FK
 INCIDENTE_TIEMPO			decimal(18,2),
@@ -385,6 +385,7 @@ BEGIN
 
 	BEGIN TRY
 		BEGIN TRANSACTION
+
 			--TABLA PAISES/NACIONALIDADES
 			INSERT INTO GDD_EXPRESS.Pais (PAIS_DETALLE)
 			SELECT distinct m.CIRCUITO_PAIS FROM gd_esquema.Maestra m
@@ -399,14 +400,22 @@ BEGIN
 			--TABLA TIPO SECTOR
 			INSERT INTO GDD_EXPRESS.Sector_Tipo (SECTOR_TIPO_DETALLE)
 			SELECT distinct m.SECTO_TIPO FROM gd_esquema.Maestra m
-			where NOT m.SECTO_TIPO IS NULL 
+			where m.SECTO_TIPO IS NOT NULL 
 
 			--TABLA CLIMA
 			INSERT INTO GDD_EXPRESS.Clima (CLIMA_DETALLE)
 			SELECT distinct m.CARRERA_CLIMA FROM gd_esquema.Maestra m
 			where NOT m.CARRERA_CLIMA IS NULL 
 
+			--TABLA INCIDENTE_TIPO
+			INSERT INTO GDD_EXPRESS.Incidente_Tipo (INCIDENTE_TIPO_DETALLE)
+			SELECT distinct m.INCIDENTE_TIPO FROM gd_esquema.Maestra m
+			where m.INCIDENTE_TIPO IS NOT NULL
 
+			--TABLA INCIDENTE_BANDERA
+			INSERT INTO GDD_EXPRESS.Incidente_Bandera (INCIDENTE_BANDERA_DETALLE)
+			SELECT distinct m.INCIDENTE_BANDERA FROM gd_esquema.Maestra m
+			where m.INCIDENTE_BANDERA IS NOT NULL
 		
 		COMMIT TRANSACTION	
 	END TRY
@@ -583,6 +592,126 @@ BEGIN
 			
 
 			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @circuito_pais)
+			SET @id_clima = (select c.CLIMA_ID from GDD_EXPRESS.Clima c WHERE c.CLIMA_DETALLE = @carrera_clima)
+
+			INSERT INTO GDD_EXPRESS.Circuito(CIRCUITO_ID, CIRCUITO_NOMBRE, CIRCUITO_PAIS_ID)
+			VALUES (@circuito_codigo, @circuito_nombre, @id_pais)
+
+			INSERT INTO GDD_EXPRESS.Carrera(CARRERA_ID, CARRERA_CLIMA_ID, CARRERA_FECHA, CARRERA_CANT_VUELTAS, CARRERA_CIRCUITO_ID)
+			VALUES (@codigo_carrera, @id_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo)
+
+			
+			FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
+
+		END
+
+		CLOSE c_circuito_carrera  
+		DEALLOCATE c_circuito_carrera 
+
+		
+		DECLARE c_sector CURSOR FOR
+		SELECT distinct CODIGO_SECTOR, SECTOR_DISTANCIA, SECTO_TIPO, CIRCUITO_CODIGO FROM gd_esquema.Maestra
+
+		declare @codigo_sector int
+		declare @sector_distancia decimal(18,2)
+		declare @sector_tipo varchar(255)
+		
+	
+		OPEN c_sector
+		FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
+		WHILE (@@FETCH_STATUS = 0)
+		BEGIN
+			declare @id_sector_tipo int
+
+			SET @id_sector_tipo = (select p.SECTOR_TIPO_ID from GDD_EXPRESS.Sector_Tipo p WHERE p.SECTOR_TIPO_DETALLE = @sector_tipo)
+
+			INSERT INTO GDD_EXPRESS.Sector(SECTOR_ID, SECTOR_DISTANCIA, SECTOR_TIPO_ID, SECTOR_CIRCUITO_ID)
+			VALUES (@codigo_sector, @sector_distancia, @id_sector_tipo, @circuito_codigo)
+
+			FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
+
+		END
+
+		CLOSE c_sector  
+		DEALLOCATE c_sector 
+
+		DECLARE c_incidente CURSOR FOR
+		SELECT distinct CODIGO_SECTOR, INCIDENTE_TIPO, INCIDENTE_TIEMPO, INCIDENTE_BANDERA FROM gd_esquema.Maestra
+		WHERE INCIDENTE_TIEMPO IS NOT NULL
+
+		declare @incidente_tipo nvarchar(255)
+		declare @incidente_tiempo decimal(18,2)
+		declare @incidente_bandera nvarchar(255)
+
+		OPEN c_incidente
+		FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_tipo, @incidente_tiempo, @incidente_bandera
+		WHILE (@@FETCH_STATUS = 0)
+		BEGIN
+			declare @id_incidente_tipo int
+			declare @id_incidente_bandera int
+
+			SET @id_incidente_tipo = (select i.INCIDENTE_TIPO_ID from GDD_EXPRESS.Incidente_Tipo i WHERE i.INCIDENTE_TIPO_DETALLE = @incidente_tipo)
+			SET  @id_incidente_bandera = (select ib.INCIDENTE_BANDERA_ID from GDD_EXPRESS.Incidente_Bandera ib WHERE ib.INCIDENTE_BANDERA_DETALLE = @incidente_bandera)
+
+			INSERT INTO GDD_EXPRESS.Incidente(INCIDENTE_SECTOR_ID, INCIDENTE_TIPO_ID, INCIDENTE_BANDERA_ID, INCIDENTE_TIEMPO)
+			VALUES (@codigo_sector, @id_incidente_tipo, @id_incidente_bandera, @incidente_tiempo)
+
+			FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_tipo, @incidente_tiempo, @incidente_bandera
+
+		END
+
+		CLOSE c_incidente  
+		DEALLOCATE c_incidente 
+
+	COMMIT TRANSACTION	
+	END TRY
+
+	BEGIN CATCH
+		ROLLBACK TRANSACTION;
+		DECLARE @errorDescripcion VARCHAR(255)
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
+        THROW 50000, @errorDescripcion, 1
+	END CATCH
+		
+END
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_auto_carrera', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_auto_carrera
+GO
+
+GO
+CREATE PROCEDURE GDD_EXPRESS.migracion_auto_carrera
+AS
+BEGIN
+	DECLARE c_circuito_carrera CURSOR FOR
+		SELECT distinct CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_FECHA, CARRERA_CANT_VUELTAS, 
+		CIRCUITO_CODIGO, CIRCUITO_NOMBRE, CIRCUITO_PAIS FROM gd_esquema.Maestra
+
+
+
+	declare @id_pais int
+	declare @id_clima int
+
+	BEGIN TRY
+	BEGIN TRANSACTION
+		declare @codigo_carrera int
+		declare @carrera_clima varchar(100)
+		declare @carrera_fecha date
+		declare @carrera_cantidad_vueltas int
+		declare @circuito_codigo int
+		declare @circuito_nombre varchar(255)
+		declare @circuito_pais varchar(255)
+
+		OPEN c_circuito_carrera
+		FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
+		WHILE (@@FETCH_STATUS = 0)
+		BEGIN
+			
+			
+
+			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @circuito_pais)
+			SET @id_clima = (select c.CLIMA_ID from GDD_EXPRESS.Clima c WHERE c.CLIMA_DETALLE = @carrera_clima)
 
 			INSERT INTO GDD_EXPRESS.Circuito(CIRCUITO_ID, CIRCUITO_NOMBRE, CIRCUITO_PAIS_ID)
 			VALUES (@circuito_codigo, @circuito_nombre, @id_pais)
@@ -637,11 +766,13 @@ BEGIN
 	END CATCH
 		
 END
-GO  
+GO
+
+
 
 EXECUTE GDD_EXPRESS.migracion_parametros;
 EXECUTE GDD_EXPRESS.migracion_autos_escuderias;
 EXECUTE GDD_EXPRESS.migracion_pilotos;
 EXECUTE GDD_EXPRESS.migracion_carrera;
 
-SELECT * FROM GDD_EXPRESS.Carrera
+SELECT * FROM GDD_EXPRESS.Incidente
