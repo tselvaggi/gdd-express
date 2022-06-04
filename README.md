@@ -11,3 +11,6 @@
 - Se creó el script que genera todas las tablas. Admiten NULL en todas las filas y no están hechas las CONSTRAINTS (PK y FK).
 
 - Se agregó una PRIMARY KEY a Auto_Carrera, con el fin de no tener que utilizar AUTO_ID y CARRERA_ID en todas las tablas. Ahora únicamente se usará AUTO_CARRERA_ID. (No está reflejado en el DER).
+
+### 3/6/2022
+- TODO: Recordar que surgió idea de trigger para limitar la cantidad de autos que tiene una escudería.
