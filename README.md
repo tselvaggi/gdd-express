@@ -1,6 +1,6 @@
 # DOCUMENTACION
 
-#[Link al DER](https://app.diagrams.net/#G1OgLCCYXOa4u9ZgsM51B6l_VoZCs3KTN9)
+[Link al DER](https://app.diagrams.net/#G1OgLCCYXOa4u9ZgsM51B6l_VoZCs3KTN9)
 
 ### REFERENCIA DEL DER
 
