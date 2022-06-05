@@ -185,6 +185,7 @@ AUTO_CARRERA_ID				int IDENTITY(1,1),
 AUTO_ID					int, --PK, FK
 CARRERA_ID				int, --PK, FK
 PRIMARY KEY (AUTO_CARRERA_ID),
+UNIQUE (AUTO_ID, CARRERA_ID),
 FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.Auto (AUTO_ID),
 FOREIGN KEY (CARRERA_ID) REFERENCES GDD_EXPRESS.Carrera (CARRERA_ID)
 )
@@ -217,8 +218,8 @@ FOREIGN KEY (INCIDENTE_TIPO_ID) REFERENCES GDD_EXPRESS.Incidente_Tipo (INCIDENTE
 
 CREATE TABLE GDD_EXPRESS.Incidente_Auto_Carrera
 (
-INCIDENTE_ID				int IDENTITY(1,1), --PK, FK
-INCIDENTE_AUTO_CARRERA_ID		int, --PK, FK --ACID
+INCIDENTE_ID				int, --PK, FK
+INCIDENTE_AUTO_CARRERA_ID		int, --PK, FK 
 INCIDENTE_NUMERO_VUELTA			decimal(18,0),
 PRIMARY KEY(INCIDENTE_ID, INCIDENTE_AUTO_CARRERA_ID),
 FOREIGN KEY (INCIDENTE_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CARRERA_ID)
@@ -650,41 +651,13 @@ BEGIN
 		CLOSE c_sector  
 		DEALLOCATE c_sector 
 
-		DECLARE c_incidente CURSOR FOR
-		SELECT distinct CODIGO_SECTOR, INCIDENTE_TIPO, INCIDENTE_TIEMPO, INCIDENTE_BANDERA FROM gd_esquema.Maestra
-		WHERE INCIDENTE_TIEMPO IS NOT NULL
-
-		declare @incidente_tipo nvarchar(255)
-		declare @incidente_tiempo decimal(18,2)
-		declare @incidente_bandera nvarchar(255)
-
-		OPEN c_incidente
-		FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_tipo, @incidente_tiempo, @incidente_bandera
-		WHILE (@@FETCH_STATUS = 0)
-		BEGIN
-			declare @id_incidente_tipo int
-			declare @id_incidente_bandera int
-
-			SET @id_incidente_tipo = (select i.INCIDENTE_TIPO_ID from GDD_EXPRESS.Incidente_Tipo i WHERE i.INCIDENTE_TIPO_DETALLE = @incidente_tipo)
-			SET  @id_incidente_bandera = (select ib.INCIDENTE_BANDERA_ID from GDD_EXPRESS.Incidente_Bandera ib WHERE ib.INCIDENTE_BANDERA_DETALLE = @incidente_bandera)
-
-			INSERT INTO GDD_EXPRESS.Incidente(INCIDENTE_SECTOR_ID, INCIDENTE_TIPO_ID, INCIDENTE_BANDERA_ID, INCIDENTE_TIEMPO)
-			VALUES (@codigo_sector, @id_incidente_tipo, @id_incidente_bandera, @incidente_tiempo)
-
-			FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_tipo, @incidente_tiempo, @incidente_bandera
-
-		END
-
-		CLOSE c_incidente  
-		DEALLOCATE c_incidente 
-
 	COMMIT TRANSACTION	
 	END TRY
 
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES E INCIDENTES';
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
         THROW 50000, @errorDescripcion, 1
 	END CATCH
 		
@@ -806,6 +779,7 @@ BEGIN
 		declare @id_auto int
 		declare @id_auto_carrera int
 
+		-- TABLAS TEMPORALES
 		CREATE TABLE #t_motor
 		(
 		AUTO_MODELO				nvarchar(255), 
@@ -887,25 +861,28 @@ BEGIN
 
 			SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a
 								WHERE a.AUTO_MODELO = @auto_modelo and a.AUTO_NUMERO = @auto_numero)
-
-
+		
+			-- MIGRACION AUTO_CARRERA
 			INSERT INTO GDD_EXPRESS.Auto_Carrera(AUTO_ID, CARRERA_ID)
 			VALUES (@id_auto, @codigo_carrera)
 			
 			SET @id_auto_carrera = @@IDENTITY
 
+			-- MIGRACION MOTOR
 			INSERT INTO GDD_EXPRESS.Motor (MOTOR_AUTO_CARRERA_ID, MOTOR_MODELO, MOTOR_NRO_SERIE)
 			SELECT @id_auto_carrera, m.TELE_MOTOR_MODELO, m.TELE_MOTOR_NRO_SERIE FROM #t_motor m
 			WHERE m.AUTO_MODELO = @auto_modelo 
 			AND m.AUTO_NUMERO = @auto_numero 
 			AND m.CODIGO_CARRERA = @codigo_carrera
 
+			-- MIGRACION CAJA CAMBIOS
 			INSERT INTO GDD_EXPRESS.Caja_Cambios (CAJA_AUTO_CARRERA_ID, CAJA_MODELO, CAJA_NRO_SERIE)
 			SELECT @id_auto_carrera, c.TELE_CAJA_MODELO, c.TELE_CAJA_NRO_SERIE FROM #t_caja c
 			WHERE c.AUTO_MODELO = @auto_modelo 
 			AND c.AUTO_NUMERO = @auto_numero 
 			AND c.CODIGO_CARRERA = @codigo_carrera
 
+			-- MIGRACION FRENOS
 			DECLARE c_freno_auto_carrera CURSOR FOR
 				SELECT distinct f.TELE_FRENO_NRO_SERIE, f.TELE_FRENO_POSICION, f.TELE_FRENO_TAMANIO_DISCO FROM #t_freno f
 				WHERE f.AUTO_MODELO = @auto_modelo 
@@ -934,6 +911,7 @@ BEGIN
 			CLOSE c_freno_auto_carrera  
 			DEALLOCATE c_freno_auto_carrera
 
+			-- MIGRACION NEUMATICOS
 			DECLARE c_neumatico_auto_carrera CURSOR FOR
 				SELECT distinct n.TELE_NEUMATICO_NRO_SERIE, n.TELE_NEUMATICO_POSICION FROM #t_neumatico n
 				WHERE n.AUTO_MODELO = @auto_modelo 
@@ -966,8 +944,8 @@ BEGIN
 		END
 
 		CLOSE c_auto_carrera  
-		DEALLOCATE c_auto_carrera 
-	COMMIT TRANSACTION	
+		DEALLOCATE c_auto_carrera
+	COMMIT TRANSACTION
 	END TRY
 
 	BEGIN CATCH
@@ -978,8 +956,99 @@ BEGIN
 	END CATCH
 		
 END
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_incidentes', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_incidentes
+GO
+
+GO
+CREATE PROCEDURE GDD_EXPRESS.migracion_incidentes
+AS
+BEGIN
+	CREATE TABLE #t_incidentes
+	(
+	AUTO_MODELO				nvarchar(255), 
+	AUTO_NUMERO				int, 
+	CODIGO_CARRERA			int,
+	CODIGO_SECTOR			int,
+	INCIDENTE_NUMERO_VUELTA				decimal(18,0),
+	INCIDENTE_BANDERA			nvarchar(255),
+	INCIDENTE_TIPO				nvarchar(255),
+	INCIDENTE_TIEMPO				decimal(18,2)
+	)
+
+	INSERT INTO #t_incidentes
+	SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, CODIGO_SECTOR, INCIDENTE_NUMERO_VUELTA, INCIDENTE_BANDERA, INCIDENTE_TIPO, INCIDENTE_TIEMPO FROM gd_esquema.Maestra
+	WHERE INCIDENTE_TIEMPO IS NOT NULL
+		
+
+	BEGIN TRY
+	BEGIN TRANSACTION
+	DECLARE c_incidente CURSOR FOR
+	SELECT distinct i.CODIGO_SECTOR, i.INCIDENTE_BANDERA, i.INCIDENTE_TIEMPO, i.INCIDENTE_TIPO FROM #t_incidentes i
+
+	declare @codigo_sector int
+	declare @incidente_tipo nvarchar(255)
+	declare @incidente_tiempo decimal(18,2)
+	declare @incidente_bandera nvarchar(255)
+
+	declare @codigo_carrera int
+
+	OPEN c_incidente
+	FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_bandera, @incidente_tiempo, @incidente_tipo
+	WHILE (@@FETCH_STATUS = 0)
+	BEGIN
+		declare @id_incidente int
+		declare @id_incidente_tipo int
+		declare @id_incidente_bandera int
+
+		SET @id_incidente_tipo = (select i.INCIDENTE_TIPO_ID from GDD_EXPRESS.Incidente_Tipo i WHERE i.INCIDENTE_TIPO_DETALLE = @incidente_tipo)
+		SET  @id_incidente_bandera = (select ib.INCIDENTE_BANDERA_ID from GDD_EXPRESS.Incidente_Bandera ib WHERE ib.INCIDENTE_BANDERA_DETALLE = @incidente_bandera)
+
+		INSERT INTO GDD_EXPRESS.Incidente(INCIDENTE_SECTOR_ID, INCIDENTE_TIPO_ID, INCIDENTE_BANDERA_ID, INCIDENTE_TIEMPO)
+		VALUES (@codigo_sector, @id_incidente_tipo, @id_incidente_bandera, @incidente_tiempo)
+
+		SET @id_incidente = @@IDENTITY
+
+		INSERT INTO GDD_EXPRESS.Incidente_Auto_Carrera (INCIDENTE_ID, INCIDENTE_NUMERO_VUELTA, INCIDENTE_AUTO_CARRERA_ID)
+		SELECT @id_incidente, i.INCIDENTE_NUMERO_VUELTA,
+		(SELECT ac.AUTO_CARRERA_ID FROM Auto_Carrera ac WHERE ac.CARRERA_ID = i.CODIGO_CARRERA 
+		AND ac.AUTO_ID = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a WHERE a.AUTO_MODELO = i.AUTO_MODELO AND a.AUTO_NUMERO = i.AUTO_NUMERO)) -- TODO: HACER FUNCION!!!!!!!!
+		FROM #t_incidentes i
+		WHERE i.CODIGO_SECTOR = @codigo_sector 
+		AND i.INCIDENTE_TIPO = @incidente_tipo 
+		AND i.INCIDENTE_BANDERA = @incidente_bandera
+		AND i.INCIDENTE_TIEMPO = @incidente_tiempo
+
+		
+
+		FETCH NEXT FROM c_incidente INTO @codigo_sector, @incidente_bandera, @incidente_tiempo, @incidente_tipo
+
+	END
+
+	CLOSE c_incidente  
+	DEALLOCATE c_incidente 
+		
+
+
+	COMMIT TRANSACTION	
+	END TRY
+
+	BEGIN CATCH
+		ROLLBACK TRANSACTION;
+		DECLARE @errorDescripcion VARCHAR(255)
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLA INCIDENTES';
+        THROW 50001, @errorDescripcion, 1
+	END CATCH
+		
+END
 GO  
 
+	
+
+
+	
 
 
 
@@ -989,9 +1058,9 @@ EXECUTE GDD_EXPRESS.migracion_autos_escuderias;
 EXECUTE GDD_EXPRESS.migracion_pilotos;
 EXECUTE GDD_EXPRESS.migracion_carrera;
 EXECUTE GDD_EXPRESS.migracion_auto_carrera;
+EXECUTE GDD_EXPRESS.migracion_incidentes;
 
-SELECT count(*) FROM GDD_EXPRESS.Caja_Cambios
+SELECT * FROM GDD_EXPRESS.Incidente_Auto_Carrera
 
-
-SELECT count(*) FROM GDD_EXPRESS.Motor
+SELECT * from GDD_EXPRESS.Incidente
 
