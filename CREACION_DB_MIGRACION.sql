@@ -389,7 +389,7 @@ BEGIN
 	declare @id_auto int
 	declare @id_auto_carrera int
 
-	SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a WHERE a.AUTO_MODELO = @auto_modelo AND a.AUTO_NUMERO = @auto_numero)
+	SET @id_auto = GDD_EXPRESS.fn_id_auto(@auto_modelo, @auto_numero)
 
 	SET @id_auto_carrera = (SELECT ac.AUTO_CARRERA_ID FROM GDD_EXPRESS.Auto_Carrera ac WHERE ac.CARRERA_ID = @codigo_carrera AND ac.AUTO_ID = @id_auto)
 	
@@ -420,12 +420,12 @@ GO
 
 
 GO
-CREATE FUNCTION GDD_EXPRESS.fn_id_pais (@pais_detalle as nvarchar(255))
+CREATE FUNCTION GDD_EXPRESS.fn_id_pais (@nacionalidad as nvarchar(255))
 RETURNS int
 BEGIN
 	declare @id_pais int
 
-	SET @id_pais = (SELECT n.PAIS_ID FROM GDD_EXPRESS.Pais n WHERE n.PAIS_DETALLE = @pais_detalle)
+	SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @nacionalidad)
 	
 	RETURN @id_pais
 END
@@ -447,6 +447,58 @@ BEGIN
 	RETURN @id_auto
 END
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_id_clima', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_clima
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_clima (@carrera_clima as varchar(100))
+RETURNS int
+BEGIN
+	declare @id_clima int
+
+	SET @id_clima = (select c.CLIMA_ID from GDD_EXPRESS.Clima c WHERE c.CLIMA_DETALLE = @carrera_clima)
+	
+	RETURN @id_clima
+END
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_id_sector_tipo', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_sector_tipo
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_sector_tipo (@sector_tipo as varchar(100))
+RETURNS int
+BEGIN
+	declare @id_sector_tipo int
+
+	SET @id_sector_tipo = (select p.SECTOR_TIPO_ID from GDD_EXPRESS.Sector_Tipo p WHERE p.SECTOR_TIPO_DETALLE = @sector_tipo)
+	
+	RETURN @id_sector_tipo
+END
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_id_posicion', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_posicion
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_posicion (@detalle_posicion as nvarchar(255))
+RETURNS int
+BEGIN
+	declare @id_posicion int
+
+	SET @id_posicion = (SELECT p.POSICION_ID FROM GDD_EXPRESS.Posicion p WHERE p.POSICION_DETALLE = @detalle_posicion)
+	
+	RETURN @id_posicion
+END
+GO
+
 
 -- STORE PROCEDURES --
 
@@ -558,7 +610,7 @@ BEGIN
 			declare @id_escuderia int
 			declare @id_auto int
 
-			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @escuderia_nacionalidad)
+			SET @id_pais = GDD_EXPRESS.fn_id_pais(@escuderia_nacionalidad)
 
 			INSERT INTO GDD_EXPRESS.Escuderia (ESCUDERIA_NOMBRE, ESCUDERIA_PAIS_ID)
 			VALUES (@escuderia_nombre, @id_pais)
@@ -627,8 +679,8 @@ BEGIN
 			
 			
 
-			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @circuito_pais)
-			SET @id_clima = (select c.CLIMA_ID from GDD_EXPRESS.Clima c WHERE c.CLIMA_DETALLE = @carrera_clima)
+			SET @id_pais = GDD_EXPRESS.fn_id_pais(@circuito_pais)
+			SET @id_clima = GDD_EXPRESS.fn_id_clima(@carrera_clima)
 
 			INSERT INTO GDD_EXPRESS.Circuito(CIRCUITO_ID, CIRCUITO_NOMBRE, CIRCUITO_PAIS_ID)
 			VALUES (@circuito_codigo, @circuito_nombre, @id_pais)
@@ -659,7 +711,7 @@ BEGIN
 		BEGIN
 			declare @id_sector_tipo int
 
-			SET @id_sector_tipo = (select p.SECTOR_TIPO_ID from GDD_EXPRESS.Sector_Tipo p WHERE p.SECTOR_TIPO_DETALLE = @sector_tipo)
+			SET @id_sector_tipo = GDD_EXPRESS.fn_id_sector_tipo(@sector_tipo)
 
 			INSERT INTO GDD_EXPRESS.Sector(SECTOR_ID, SECTOR_DISTANCIA, SECTOR_TIPO_ID, SECTOR_CIRCUITO_ID)
 			VALUES (@codigo_sector, @sector_distancia, @id_sector_tipo, @circuito_codigo)
@@ -907,8 +959,7 @@ BEGIN
 		BEGIN
 			
 
-			SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a
-								WHERE a.AUTO_MODELO = @auto_modelo and a.AUTO_NUMERO = @auto_numero)
+			SET @id_auto = GDD_EXPRESS.fn_id_auto(@auto_modelo, @auto_numero)
 		
 			-- MIGRACION AUTO_CARRERA
 			INSERT INTO GDD_EXPRESS.Auto_Carrera(AUTO_ID, CARRERA_ID)
@@ -981,7 +1032,7 @@ BEGIN
 			WHILE (@@FETCH_STATUS = 0)
 			BEGIN
 
-				SET @id_posicion = (SELECT p.POSICION_ID FROM GDD_EXPRESS.Posicion p WHERE p.POSICION_DETALLE = @freno_posicion)
+				SET @id_posicion = GDD_EXPRESS.fn_id_posicion(@freno_posicion)
 				
 				INSERT INTO GDD_EXPRESS.Freno (FRENO_AUTO_CARRERA_ID, FRENO_NRO_SERIE, FRENO_POSICION_ID, FRENO_TAMANIO_DISCO)
 				VALUES (@id_auto_carrera, @freno_nro_serie, @id_posicion, @freno_tamanio_disco)
@@ -1021,7 +1072,7 @@ BEGIN
 			WHILE (@@FETCH_STATUS = 0)
 			BEGIN
 
-				SET @id_posicion = (SELECT p.POSICION_ID FROM GDD_EXPRESS.Posicion p WHERE p.POSICION_DETALLE = @neumatico_posicion)
+				SET @id_posicion = GDD_EXPRESS.fn_id_posicion(@neumatico_posicion)
 				
 				INSERT INTO GDD_EXPRESS.Neumatico(NEUMATICO_AUTO_CARRERA_ID, NEUMATICO_NRO_SERIE, NEUMATICO_POSICION_ID)
 				VALUES (@id_auto_carrera, @neumatico_nro_serie, @id_posicion)
