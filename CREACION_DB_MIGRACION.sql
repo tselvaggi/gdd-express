@@ -414,6 +414,40 @@ BEGIN
 END
 GO
 
+IF OBJECT_ID('GDD_EXPRESS.fn_id_pais', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_pais
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_pais (@pais_detalle as nvarchar(255))
+RETURNS int
+BEGIN
+	declare @id_pais int
+
+	SET @id_pais = (SELECT n.PAIS_ID FROM GDD_EXPRESS.Pais n WHERE n.PAIS_DETALLE = @pais_detalle)
+	
+	RETURN @id_pais
+END
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_id_auto', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_auto
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_auto (@auto_modelo as nvarchar(255), @auto_numero as int)
+RETURNS int
+BEGIN
+	declare @id_auto int
+
+	SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a WHERE a.AUTO_MODELO = @auto_modelo AND a.AUTO_NUMERO = @auto_numero)
+	
+	RETURN @id_auto
+END
+GO
+
 -- STORE PROCEDURES --
 
 IF OBJECT_ID('GDD_EXPRESS.migracion_parametros', 'P') IS NOT NULL
@@ -459,7 +493,7 @@ BEGIN
 			SELECT distinct m.INCIDENTE_BANDERA FROM gd_esquema.Maestra m
 			where m.INCIDENTE_BANDERA IS NOT NULL
 
-			--TABLA 
+			--TABLA POSICION
 			INSERT INTO GDD_EXPRESS.Posicion (POSICION_DETALLE)
 			SELECT distinct m.NEUMATICO1_POSICION_NUEVO FROM gd_esquema.Maestra m
 			where NOT m.NEUMATICO1_POSICION_NUEVO IS NULL
@@ -484,15 +518,15 @@ BEGIN
 	END CATCH
 		
 END
-GO  
+GO
 
 
-IF OBJECT_ID('GDD_EXPRESS.migracion_autos_escuderias', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_autos_escuderias
+IF OBJECT_ID('GDD_EXPRESS.migracion_autos_escuderias_pilotos', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_autos_escuderias_pilotos
 GO
 
 GO
-CREATE PROCEDURE GDD_EXPRESS.migracion_autos_escuderias
+CREATE PROCEDURE GDD_EXPRESS.migracion_autos_escuderias_pilotos
 AS
 BEGIN
 	DECLARE c_escuderia CURSOR FOR
@@ -540,6 +574,9 @@ BEGIN
 
 		END
 
+		INSERT INTO GDD_EXPRESS.Piloto (PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_FECHA_NACIMIENTO, PILOTO_NACIONALIDAD, PILOTO_AUTO_ID)
+		SELECT distinct m.PILOTO_NOMBRE, m.PILOTO_APELLIDO, m.PILOTO_FECHA_NACIMIENTO,  GDD_EXPRESS.fn_id_pais(m.PILOTO_NACIONALIDAD), GDD_EXPRESS.fn_id_auto(m.AUTO_MODELO, m.AUTO_NUMERO) FROM gd_esquema.Maestra m
+
 		CLOSE c_escuderia  
 		DEALLOCATE c_escuderia 
 	COMMIT TRANSACTION	
@@ -555,63 +592,6 @@ BEGIN
 END
 GO  
 
-IF OBJECT_ID('GDD_EXPRESS.migracion_pilotos', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_pilotos
-GO
-
-GO
-CREATE PROCEDURE GDD_EXPRESS.migracion_pilotos
-AS
-BEGIN
-	DECLARE c_pilotos CURSOR FOR
-		SELECT distinct m.PILOTO_NOMBRE, m.PILOTO_APELLIDO, m.PILOTO_NACIONALIDAD, m.PILOTO_FECHA_NACIMIENTO, m.AUTO_MODELO, m.AUTO_NUMERO FROM gd_esquema.Maestra m
-		
-
-	BEGIN TRY
-	BEGIN TRANSACTION
-
-		declare @pilo_nombre nvarchar(50)
-		declare @pilo_apellido nvarchar(50)
-		declare @pilo_nacionalidad nvarchar(50)
-		declare @pilo_fecha_nacimiento date
-		declare @auto_modelo nvarchar(255)
-		declare @auto_numero int
-
-		OPEN c_pilotos
-		FETCH NEXT FROM c_pilotos INTO @pilo_nombre, @pilo_apellido, @pilo_nacionalidad, @pilo_fecha_nacimiento, @auto_modelo, @auto_numero
-		WHILE (@@FETCH_STATUS = 0)
-		BEGIN
-			declare @id_pais int
-			declare @id_auto int
-
-			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @pilo_nacionalidad)
-
-			SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a
-								WHERE a.AUTO_MODELO = @auto_modelo and a.AUTO_NUMERO = @auto_numero)
-
-
-			INSERT INTO GDD_EXPRESS.Piloto (PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_FECHA_NACIMIENTO, PILOTO_NACIONALIDAD, PILOTO_AUTO_ID)
-			VALUES (@pilo_nombre, @pilo_apellido, @pilo_fecha_nacimiento, @id_pais,  @id_auto)
-			
-
-			FETCH NEXT FROM c_pilotos INTO @pilo_nombre, @pilo_apellido, @pilo_nacionalidad, @pilo_fecha_nacimiento, @auto_modelo, @auto_numero
-
-		END
-
-		CLOSE c_pilotos  
-		DEALLOCATE c_pilotos 
-	COMMIT TRANSACTION	
-	END TRY
-
-	BEGIN CATCH
-		ROLLBACK TRANSACTION;
-		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLA PILOTO';
-        THROW 50001, @errorDescripcion, 1
-	END CATCH
-		
-END
-GO  
 
 IF OBJECT_ID('GDD_EXPRESS.migracion_carrera', 'P') IS NOT NULL
     DROP PROCEDURE GDD_EXPRESS.migracion_carrera
@@ -699,98 +679,6 @@ BEGIN
 		DECLARE @errorDescripcion VARCHAR(255)
 		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
         THROW 50000, @errorDescripcion, 1
-	END CATCH
-		
-END
-GO
-
-IF OBJECT_ID('GDD_EXPRESS.migracion_auto_carrera', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_auto_carrera
-GO
-
-GO
-CREATE PROCEDURE GDD_EXPRESS.migracion_auto_carrera
-AS
-BEGIN
-	DECLARE c_circuito_carrera CURSOR FOR
-		SELECT distinct CODIGO_CARRERA, CARRERA_CLIMA, CARRERA_FECHA, CARRERA_CANT_VUELTAS, 
-		CIRCUITO_CODIGO, CIRCUITO_NOMBRE, CIRCUITO_PAIS FROM gd_esquema.Maestra
-
-
-
-	declare @id_pais int
-	declare @id_clima int
-
-	BEGIN TRY
-	BEGIN TRANSACTION
-		declare @codigo_carrera int
-		declare @carrera_clima varchar(100)
-		declare @carrera_fecha date
-		declare @carrera_cantidad_vueltas int
-		declare @circuito_codigo int
-		declare @circuito_nombre varchar(255)
-		declare @circuito_pais varchar(255)
-
-		OPEN c_circuito_carrera
-		FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
-		WHILE (@@FETCH_STATUS = 0)
-		BEGIN
-			
-			
-
-			SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @circuito_pais)
-			SET @id_clima = (select c.CLIMA_ID from GDD_EXPRESS.Clima c WHERE c.CLIMA_DETALLE = @carrera_clima)
-
-			INSERT INTO GDD_EXPRESS.Circuito(CIRCUITO_ID, CIRCUITO_NOMBRE, CIRCUITO_PAIS_ID)
-			VALUES (@circuito_codigo, @circuito_nombre, @id_pais)
-
-			INSERT INTO GDD_EXPRESS.Carrera(CARRERA_ID, CARRERA_CLIMA_ID, CARRERA_FECHA, CARRERA_CANT_VUELTAS, CARRERA_CIRCUITO_ID)
-			VALUES (@codigo_carrera, @id_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo)
-
-			
-			FETCH NEXT FROM c_circuito_carrera INTO @codigo_carrera, @carrera_clima, @carrera_fecha, @carrera_cantidad_vueltas, @circuito_codigo, @circuito_nombre, @circuito_pais
-
-		END
-
-		CLOSE c_circuito_carrera  
-		DEALLOCATE c_circuito_carrera 
-
-		
-		DECLARE c_sector CURSOR FOR
-		SELECT distinct CODIGO_SECTOR, SECTOR_DISTANCIA, SECTO_TIPO, CIRCUITO_CODIGO FROM gd_esquema.Maestra
-
-		declare @codigo_sector int
-		declare @sector_distancia decimal(18,2)
-		declare @sector_tipo varchar(255)
-		
-	
-		OPEN c_sector
-		FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
-		WHILE (@@FETCH_STATUS = 0)
-		BEGIN
-			declare @id_sector_tipo int
-
-			SET @id_sector_tipo = (select p.SECTOR_TIPO_ID from GDD_EXPRESS.Sector_Tipo p WHERE p.SECTOR_TIPO_DETALLE = @sector_tipo)
-
-			INSERT INTO GDD_EXPRESS.Sector(SECTOR_ID, SECTOR_DISTANCIA, SECTOR_TIPO_ID, SECTOR_CIRCUITO_ID)
-			VALUES (@codigo_sector, @sector_distancia, @id_sector_tipo, @circuito_codigo)
-
-			FETCH NEXT FROM c_sector INTO @codigo_sector, @sector_distancia, @sector_tipo, @circuito_codigo
-
-		END
-
-		CLOSE c_sector  
-		DEALLOCATE c_sector 
-
-
-	COMMIT TRANSACTION	
-	END TRY
-
-	BEGIN CATCH
-		ROLLBACK TRANSACTION;
-		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
-        THROW 50005, @errorDescripcion, 1
 	END CATCH
 		
 END
@@ -1380,9 +1268,10 @@ GO
 
 
 EXECUTE GDD_EXPRESS.migracion_parametros;
-EXECUTE GDD_EXPRESS.migracion_autos_escuderias;
-EXECUTE GDD_EXPRESS.migracion_pilotos;
+EXECUTE GDD_EXPRESS.migracion_autos_escuderias_pilotos;
 EXECUTE GDD_EXPRESS.migracion_carrera;
 EXECUTE GDD_EXPRESS.migracion_auto_carrera;
 EXECUTE GDD_EXPRESS.migracion_incidentes;
 EXECUTE GDD_EXPRESS.migracion_box;
+
+SELECT * FROM GDD_EXPRESS.Piloto
