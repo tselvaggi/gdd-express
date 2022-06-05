@@ -217,7 +217,7 @@ FOREIGN KEY (INCIDENTE_TIPO_ID) REFERENCES GDD_EXPRESS.Incidente_Tipo (INCIDENTE
 
 CREATE TABLE GDD_EXPRESS.Incidente_Auto_Carrera
 (
-INCIDENTE_ID				int, --PK, FK
+INCIDENTE_ID				int IDENTITY(1,1), --PK, FK
 INCIDENTE_AUTO_CARRERA_ID		int, --PK, FK --ACID
 INCIDENTE_NUMERO_VUELTA			decimal(18,0),
 PRIMARY KEY(INCIDENTE_ID, INCIDENTE_AUTO_CARRERA_ID),
@@ -226,7 +226,7 @@ FOREIGN KEY (INCIDENTE_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUT
 
 CREATE TABLE GDD_EXPRESS.Motor
 (
-MOTOR_ID				int, --PK
+MOTOR_ID				int IDENTITY(1,1), --PK
 MOTOR_AUTO_CARRERA_ID			int, --FK
 MOTOR_MODELO				nvarchar(255),
 MOTOR_NRO_SERIE				nvarchar(255),
@@ -236,7 +236,7 @@ FOREIGN KEY (MOTOR_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CA
 
 CREATE TABLE GDD_EXPRESS.Caja_Cambios
 (
-CAJA_ID					int, --PK
+CAJA_ID					int IDENTITY(1,1), --PK
 CAJA_AUTO_CARRERA_ID			int, --FK
 CAJA_MODELO				nvarchar(50),
 CAJA_NRO_SERIE				nvarchar(255),
@@ -246,21 +246,21 @@ FOREIGN KEY (CAJA_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CAR
 
 CREATE TABLE GDD_EXPRESS.Posicion
 (
-POSICION_ID				int, --PK
-POSICION_DETALLE			int,
+POSICION_ID				int IDENTITY(1,1), --PK
+POSICION_DETALLE			nvarchar(255),
 PRIMARY KEY (POSICION_ID)
 )
 
 CREATE TABLE GDD_EXPRESS.Neumatico_Tipo
 (
-NEUMATICO_TIPO_ID			int, --PK
+NEUMATICO_TIPO_ID			int IDENTITY(1,1), --PK
 NEUMATICO_TIPO_DETALLE			varchar(255),
 PRIMARY KEY (NEUMATICO_TIPO_ID)
 )
 
 CREATE TABLE GDD_EXPRESS.Neumatico
 (
-NEUMATICO_ID				int, --PK
+NEUMATICO_ID				int IDENTITY(1,1), --PK
 NEUMATICO_AUTO_CARRERA_ID		int, --FK
 NEUMATICO_NRO_SERIE			nvarchar(255),
 NEUMATICO_TIPO_ID			int, --FK
@@ -273,9 +273,10 @@ FOREIGN KEY (NEUMATICO_POSICION_ID) REFERENCES GDD_EXPRESS.Posicion (POSICION_ID
 
 CREATE TABLE GDD_EXPRESS.Freno
 (
-FRENO_ID				int, --PK
+FRENO_ID				int IDENTITY(1,1), --PK
 FRENO_AUTO_CARRERA_ID			int, --FK
 FRENO_NRO_SERIE				nvarchar(255),
+FRENO_TAMANIO_DISCO				decimal(18,2),
 FRENO_POSICION_ID			int,  --FK
 PRIMARY KEY (FRENO_ID),
 FOREIGN KEY (FRENO_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CARRERA_ID),
@@ -284,12 +285,12 @@ FOREIGN KEY (FRENO_POSICION_ID) REFERENCES GDD_EXPRESS.Posicion (POSICION_ID)
 
 CREATE TABLE GDD_EXPRESS.Box_Parada
 (
-BOX_PARADA_ID				int, --PK
-BOX_PARADA_AUTO_CARRERA_ID		int, --FK
+BOX_PARADA_ID				int IDENTITY(1,1), --PK
+BOX_AUTO_CARRERA_ID		int, --FK
 BOX_PARADA_VUELTA			decimal(18,0),
 BOX_PARADA_TIEMPO			decimal(18,2),
 PRIMARY KEY (BOX_PARADA_ID),
-FOREIGN KEY (BOX_PARADA_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CARRERA_ID)
+FOREIGN KEY (BOX_AUTO_CARRERA_ID) REFERENCES GDD_EXPRESS.Auto_Carrera (AUTO_CARRERA_ID)
 )
 
 CREATE TABLE GDD_EXPRESS.Cambio_Neumatico
@@ -416,6 +417,20 @@ BEGIN
 			INSERT INTO GDD_EXPRESS.Incidente_Bandera (INCIDENTE_BANDERA_DETALLE)
 			SELECT distinct m.INCIDENTE_BANDERA FROM gd_esquema.Maestra m
 			where m.INCIDENTE_BANDERA IS NOT NULL
+
+			--TABLA 
+			INSERT INTO GDD_EXPRESS.Posicion (POSICION_DETALLE)
+			SELECT distinct m.NEUMATICO1_POSICION_NUEVO FROM gd_esquema.Maestra m
+			where NOT m.NEUMATICO1_POSICION_NUEVO IS NULL
+			UNION
+			SELECT distinct m.NEUMATICO2_POSICION_NUEVO FROM gd_esquema.Maestra m
+			where NOT m.NEUMATICO2_POSICION_NUEVO IS NULL
+			UNION
+			SELECT distinct m.NEUMATICO3_POSICION_NUEVO FROM gd_esquema.Maestra m
+			where NOT m.NEUMATICO3_POSICION_NUEVO IS NULL
+			UNION
+			SELECT distinct m.NEUMATICO4_POSICION_NUEVO FROM gd_esquema.Maestra m
+			where NOT m.NEUMATICO2_POSICION_NUEVO IS NULL
 		
 		COMMIT TRANSACTION	
 	END TRY
@@ -669,7 +684,7 @@ BEGIN
 	BEGIN CATCH
 		ROLLBACK TRANSACTION;
 		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES E INCIDENTES';
         THROW 50000, @errorDescripcion, 1
 	END CATCH
 		
@@ -762,11 +777,210 @@ BEGIN
 		ROLLBACK TRANSACTION;
 		DECLARE @errorDescripcion VARCHAR(255)
 		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS CARRERA, CIRCUITO, SECTORES';
-        THROW 50000, @errorDescripcion, 1
+        THROW 50005, @errorDescripcion, 1
 	END CATCH
 		
 END
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_auto_carrera', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_auto_carrera
+GO
+
+GO
+CREATE PROCEDURE GDD_EXPRESS.migracion_auto_carrera
+AS
+BEGIN
+	DECLARE c_auto_carrera CURSOR FOR
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA FROM gd_esquema.Maestra
+		
+
+
+	BEGIN TRY
+	BEGIN TRANSACTION
+
+		declare @auto_modelo nvarchar(255)
+		declare @auto_numero int 
+		declare @codigo_carrera int
+
+		declare @id_auto int
+		declare @id_auto_carrera int
+
+		CREATE TABLE #t_motor
+		(
+		AUTO_MODELO				nvarchar(255), 
+		AUTO_NUMERO				int, 
+		CODIGO_CARRERA			int,
+		TELE_MOTOR_MODELO			nvarchar(255), 
+		TELE_MOTOR_NRO_SERIE			nvarchar(255)
+		)
+
+		INSERT INTO #t_motor
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_MOTOR_MODELO, TELE_MOTOR_NRO_SERIE FROM gd_esquema.Maestra
+		WHERE TELE_MOTOR_NRO_SERIE IS NOT NULL
+
+		CREATE TABLE #t_caja
+		(
+		AUTO_MODELO				nvarchar(255), 
+		AUTO_NUMERO				int, 
+		CODIGO_CARRERA			int,
+		TELE_CAJA_MODELO			nvarchar(255), 
+		TELE_CAJA_NRO_SERIE			nvarchar(255)
+		)
+
+		INSERT INTO #t_caja
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_CAJA_MODELO, TELE_CAJA_NRO_SERIE FROM gd_esquema.Maestra
+		WHERE TELE_CAJA_NRO_SERIE IS NOT NULL
+
+		CREATE TABLE #t_freno
+		(
+		AUTO_MODELO				nvarchar(255), 
+		AUTO_NUMERO				int, 
+		CODIGO_CARRERA			int,
+		TELE_FRENO_NRO_SERIE			nvarchar(255), 
+		TELE_FRENO_TAMANIO_DISCO			decimal(18,2),
+		TELE_FRENO_POSICION				nvarchar(255)
+		)
+
+		INSERT INTO #t_freno
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_FRENO1_NRO_SERIE, TELE_FRENO1_TAMANIO_DISCO, TELE_FRENO1_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_FRENO1_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_FRENO2_NRO_SERIE, TELE_FRENO2_TAMANIO_DISCO, TELE_FRENO2_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_FRENO2_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_FRENO3_NRO_SERIE, TELE_FRENO3_TAMANIO_DISCO, TELE_FRENO3_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_FRENO3_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_FRENO4_NRO_SERIE, TELE_FRENO4_TAMANIO_DISCO, TELE_FRENO4_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_FRENO4_NRO_SERIE IS NOT NULL
+		ORDER BY 1,2,3
+
+		CREATE TABLE #t_neumatico
+		(
+		AUTO_MODELO				nvarchar(255), 
+		AUTO_NUMERO				int, 
+		CODIGO_CARRERA			int,
+		TELE_NEUMATICO_NRO_SERIE			nvarchar(255), 
+		TELE_NEUMATICO_POSICION			nvarchar(255)
+		)
+
+		INSERT INTO #t_neumatico
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_NEUMATICO1_NRO_SERIE, TELE_NEUMATICO1_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_NEUMATICO1_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_NEUMATICO2_NRO_SERIE, TELE_NEUMATICO2_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_NEUMATICO2_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_NEUMATICO3_NRO_SERIE, TELE_NEUMATICO3_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_NEUMATICO3_NRO_SERIE IS NOT NULL
+		UNION
+		SELECT distinct AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA, TELE_NEUMATICO4_NRO_SERIE, TELE_NEUMATICO4_POSICION FROM gd_esquema.Maestra
+		WHERE TELE_NEUMATICO4_NRO_SERIE IS NOT NULL
+		ORDER BY 1,2,3
+
+		OPEN c_auto_carrera
+		FETCH NEXT FROM c_auto_carrera INTO @auto_modelo, @auto_numero, @codigo_carrera
+		WHILE (@@FETCH_STATUS = 0)
+		BEGIN
+			
+
+			SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a
+								WHERE a.AUTO_MODELO = @auto_modelo and a.AUTO_NUMERO = @auto_numero)
+
+
+			INSERT INTO GDD_EXPRESS.Auto_Carrera(AUTO_ID, CARRERA_ID)
+			VALUES (@id_auto, @codigo_carrera)
+			
+			SET @id_auto_carrera = @@IDENTITY
+
+			INSERT INTO GDD_EXPRESS.Motor (MOTOR_AUTO_CARRERA_ID, MOTOR_MODELO, MOTOR_NRO_SERIE)
+			SELECT @id_auto_carrera, m.TELE_MOTOR_MODELO, m.TELE_MOTOR_NRO_SERIE FROM #t_motor m
+			WHERE m.AUTO_MODELO = @auto_modelo 
+			AND m.AUTO_NUMERO = @auto_numero 
+			AND m.CODIGO_CARRERA = @codigo_carrera
+
+			INSERT INTO GDD_EXPRESS.Caja_Cambios (CAJA_AUTO_CARRERA_ID, CAJA_MODELO, CAJA_NRO_SERIE)
+			SELECT @id_auto_carrera, c.TELE_CAJA_MODELO, c.TELE_CAJA_NRO_SERIE FROM #t_caja c
+			WHERE c.AUTO_MODELO = @auto_modelo 
+			AND c.AUTO_NUMERO = @auto_numero 
+			AND c.CODIGO_CARRERA = @codigo_carrera
+
+			DECLARE c_freno_auto_carrera CURSOR FOR
+				SELECT distinct f.TELE_FRENO_NRO_SERIE, f.TELE_FRENO_POSICION, f.TELE_FRENO_TAMANIO_DISCO FROM #t_freno f
+				WHERE f.AUTO_MODELO = @auto_modelo 
+				AND f.AUTO_NUMERO = @auto_numero 
+				AND f.CODIGO_CARRERA = @codigo_carrera
+			
+			declare @freno_nro_serie nvarchar(255)
+			declare @freno_posicion nvarchar(255)
+			declare @freno_tamanio_disco decimal(18,2)
+			
+			declare @id_posicion int
+
+			OPEN c_freno_auto_carrera
+			FETCH NEXT FROM c_freno_auto_carrera INTO @freno_nro_serie, @freno_posicion, @freno_tamanio_disco
+			WHILE (@@FETCH_STATUS = 0)
+			BEGIN
+
+				SET @id_posicion = (SELECT p.POSICION_ID FROM GDD_EXPRESS.Posicion p WHERE p.POSICION_DETALLE = @freno_posicion)
+				
+				INSERT INTO GDD_EXPRESS.Freno (FRENO_AUTO_CARRERA_ID, FRENO_NRO_SERIE, FRENO_POSICION_ID, FRENO_TAMANIO_DISCO)
+				VALUES (@id_auto_carrera, @freno_nro_serie, @id_posicion, @freno_tamanio_disco)
+
+
+				FETCH NEXT FROM c_freno_auto_carrera INTO @freno_nro_serie, @freno_posicion, @freno_tamanio_disco
+			END
+			CLOSE c_freno_auto_carrera  
+			DEALLOCATE c_freno_auto_carrera
+
+			DECLARE c_neumatico_auto_carrera CURSOR FOR
+				SELECT distinct n.TELE_NEUMATICO_NRO_SERIE, n.TELE_NEUMATICO_POSICION FROM #t_neumatico n
+				WHERE n.AUTO_MODELO = @auto_modelo 
+				AND n.AUTO_NUMERO = @auto_numero 
+				AND n.CODIGO_CARRERA = @codigo_carrera
+			
+			declare @neumatico_nro_serie nvarchar(255)
+			declare @neumatico_posicion nvarchar(255)
+			
+
+			OPEN c_neumatico_auto_carrera
+			FETCH NEXT FROM c_neumatico_auto_carrera INTO @neumatico_nro_serie, @neumatico_posicion
+			WHILE (@@FETCH_STATUS = 0)
+			BEGIN
+
+				SET @id_posicion = (SELECT p.POSICION_ID FROM GDD_EXPRESS.Posicion p WHERE p.POSICION_DETALLE = @neumatico_posicion)
+				
+				INSERT INTO GDD_EXPRESS.Neumatico(NEUMATICO_AUTO_CARRERA_ID, NEUMATICO_NRO_SERIE, NEUMATICO_POSICION_ID)
+				VALUES (@id_auto_carrera, @neumatico_nro_serie, @id_posicion)
+
+
+				FETCH NEXT FROM c_neumatico_auto_carrera INTO @neumatico_nro_serie, @neumatico_posicion
+			END
+			CLOSE c_neumatico_auto_carrera  
+			DEALLOCATE c_neumatico_auto_carrera
+
+
+			FETCH NEXT FROM c_auto_carrera INTO @auto_modelo, @auto_numero, @codigo_carrera
+
+		END
+
+		CLOSE c_auto_carrera  
+		DEALLOCATE c_auto_carrera 
+	COMMIT TRANSACTION	
+	END TRY
+
+	BEGIN CATCH
+		ROLLBACK TRANSACTION;
+		DECLARE @errorDescripcion VARCHAR(255)
+		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLAS AUTO_CARRERA Y COMPONENTES';
+        THROW 50001, @errorDescripcion, 1
+	END CATCH
+		
+END
+GO  
+
+
 
 
 
@@ -774,5 +988,10 @@ EXECUTE GDD_EXPRESS.migracion_parametros;
 EXECUTE GDD_EXPRESS.migracion_autos_escuderias;
 EXECUTE GDD_EXPRESS.migracion_pilotos;
 EXECUTE GDD_EXPRESS.migracion_carrera;
+EXECUTE GDD_EXPRESS.migracion_auto_carrera;
 
-SELECT * FROM GDD_EXPRESS.Incidente
+SELECT count(*) FROM GDD_EXPRESS.Caja_Cambios
+
+
+SELECT count(*) FROM GDD_EXPRESS.Motor
+

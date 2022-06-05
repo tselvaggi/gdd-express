@@ -18,3 +18,22 @@
 - TODO: Recordar que surgió idea de trigger para limitar la cantidad de autos que tiene una escudería.
 - TODO: Función que traiga id de tablas parametros.
 - Se migraron las tablas Auto, Escudería, Piloto, Carrera, Circuito y Sector (+ tablas parametros que necesite c/u)
+
+### 4/6/2022
+
+- Pudimos relevar que todos los neumáticos que fueron cambiados, también fueron medidos por telemetría. Por lo que concluímos en que todos los neumáticos para la tabla `Neumatico` pueden ser extraídos de la telemetría.
+
+```sql
+    --AMBAS CONSULTAS DAN LA MISMA CANTIDAD DE COLUMNAS.
+
+    SELECT distinct TELE_NEUMATICO1_NRO_SERIE, AUTO_MODELO, AUTO_NUMERO, CODIGO_CARRERA FROM gd_esquema.Maestra
+    WHERE TELE_NEUMATICO1_NRO_SERIE IS NOT NULL AND TELE_NEUMATICO1_NRO_SERIE IN (
+    SELECT distinct NEUMATICO1_NRO_SERIE_NUEVO FROM gd_esquema.Maestra
+    WHERE NEUMATICO1_NRO_SERIE_NUEVO IS NOT NULL)
+
+    SELECT distinct NEUMATICO1_NRO_SERIE_NUEVO FROM gd_esquema.Maestra
+    WHERE NEUMATICO1_NRO_SERIE_NUEVO IS NOT NULL
+
+```
+
+- Se migraron tablas Auto_Carrera y sus componentes
