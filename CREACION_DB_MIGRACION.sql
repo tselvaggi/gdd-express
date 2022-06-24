@@ -377,6 +377,23 @@ FOREIGN KEY (NEUMATICO_ID) REFERENCES GDD_EXPRESS.Neumatico (NEUMATICO_ID)
 
 -- FUNCTIONS --
 
+IF OBJECT_ID('GDD_EXPRESS.fn_id_auto', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_id_auto
+GO
+
+
+GO
+CREATE FUNCTION GDD_EXPRESS.fn_id_auto (@auto_modelo as nvarchar(255), @auto_numero as int)
+RETURNS int
+BEGIN
+	declare @id_auto int
+
+	SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a WHERE a.AUTO_MODELO = @auto_modelo AND a.AUTO_NUMERO = @auto_numero)
+	
+	RETURN @id_auto
+END
+GO
+
 IF OBJECT_ID('GDD_EXPRESS.fn_id_auto_carrera', 'FN') IS NOT NULL
 	DROP FUNCTION GDD_EXPRESS.fn_id_auto_carrera
 GO
@@ -428,23 +445,6 @@ BEGIN
 	SET @id_pais = (select p.PAIS_ID from GDD_EXPRESS.Pais p WHERE p.PAIS_DETALLE = @nacionalidad)
 	
 	RETURN @id_pais
-END
-GO
-
-IF OBJECT_ID('GDD_EXPRESS.fn_id_auto', 'FN') IS NOT NULL
-	DROP FUNCTION GDD_EXPRESS.fn_id_auto
-GO
-
-
-GO
-CREATE FUNCTION GDD_EXPRESS.fn_id_auto (@auto_modelo as nvarchar(255), @auto_numero as int)
-RETURNS int
-BEGIN
-	declare @id_auto int
-
-	SET @id_auto = (SELECT a.AUTO_ID FROM GDD_EXPRESS.Auto a WHERE a.AUTO_MODELO = @auto_modelo AND a.AUTO_NUMERO = @auto_numero)
-	
-	RETURN @id_auto
 END
 GO
 
@@ -1282,42 +1282,6 @@ BEGIN
 END
 GO  
 
-
-IF OBJECT_ID('GDD_EXPRESS.migracion_telemetria', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_telemetria
-GO
-
-GO
-CREATE PROCEDURE GDD_EXPRESS.migracion_telemetria
-AS
-BEGIN
-
-	BEGIN TRY
-	BEGIN TRANSACTION
-	
-
-
-	COMMIT TRANSACTION	
-	END TRY
-
-	BEGIN CATCH
-		ROLLBACK TRANSACTION;
-		DECLARE @errorDescripcion VARCHAR(255)
-		SELECT @errorDescripcion = ERROR_MESSAGE() + ' ERROR MIGRANDO DATOS EN TABLA TELEMETRIA';
-        THROW 50001, @errorDescripcion, 1
-	END CATCH
-		
-END
-GO  
-
-	
-
-
-	
-
-
-
-
 EXECUTE GDD_EXPRESS.migracion_parametros;
 EXECUTE GDD_EXPRESS.migracion_autos_escuderias_pilotos;
 EXECUTE GDD_EXPRESS.migracion_carrera;
@@ -1325,4 +1289,3 @@ EXECUTE GDD_EXPRESS.migracion_auto_carrera;
 EXECUTE GDD_EXPRESS.migracion_incidentes;
 EXECUTE GDD_EXPRESS.migracion_box;
 
-SELECT * FROM GDD_EXPRESS.Piloto
