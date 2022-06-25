@@ -23,9 +23,18 @@ GO
 IF OBJECT_ID('GDD_EXPRESS.migracion_bi_vueltas', 'P') IS NOT NULL
     DROP PROCEDURE GDD_EXPRESS.migracion_bi_vueltas
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_tiempo', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_tiempo
 --------------------------------------------------- 
 -- CHEQUEO DE FUNCIONES
 ---------------------------------------------------
+IF OBJECT_ID('GDD_EXPRESS.fn_cuatrimestre', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_cuatrimestre
+GO
+
+
+GO
 
 --------------------------------------------------- 
 -- CHEQUEO DE VISTAS DEL MODELO BI
@@ -57,6 +66,10 @@ GO
 
 IF OBJECT_ID('GDD_EXPRESS.BI_Vuelta', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Vuelta
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Tiempo', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Tiempo
 GO
 
 
@@ -112,6 +125,16 @@ PRIMARY KEY (VUELTA_ID)
 )
 GO
 
+
+CREATE TABLE GDD_EXPRESS.BI_Tiempo
+(
+TIEMPO_ID							int IDENTITY(1,1), --PK
+TIEMPO_ANIO							decimal(18,0),
+TIEMPO_CUATRIMESTRE					decimal(18,0),
+PRIMARY KEY (TIEMPO_ID)
+)
+GO
+
 -- TABLAS DE HECHOS
 
 CREATE TABLE GDD_EXPRESS.BI_Desgaste
@@ -141,7 +164,19 @@ GO
 ---------------------------------------------------
 -- CREACION DE FUNCIONES
 ---------------------------------------------------
-
+CREATE FUNCTION GDD_EXPRESS.fn_cuatrimestre (@fecha as date)
+RETURNS int
+BEGIN
+	declare @cuatri int
+	SET @cuatri = CASE
+		WHEN MONTH(@fecha) <5 THEN 1
+		WHEN MONTH(@fecha) <9 AND MONTH(@fecha) >=5 THEN  2
+		WHEN MONTH(@fecha) <13 AND MONTH(@fecha) >=9 THEN 3
+    ELSE NULL
+	END
+	RETURN @cuatri
+END
+GO
 
 
 --------------------------------------------------- 
@@ -194,6 +229,14 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_vueltas AS
     END
 GO
 
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_tiempo AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Tiempo(TIEMPO_ANIO, TIEMPO_CUATRIMESTRE)
+		-- NO SE COMO FILTRAR LOS REPETIDOS
+           SELECT YEAR(CARRERA_FECHA), GDD_EXPRESS.fn_cuatrimestre(CARRERA_FECHA) FROM GDD_EXPRESS.Carrera
+    END
+GO
+
 -- Tablas de hechos
 
 
@@ -209,6 +252,7 @@ EXECUTE GDD_EXPRESS.migracion_bi_componentes;
 EXECUTE GDD_EXPRESS.migracion_bi_auto;
 EXECUTE GDD_EXPRESS.migracion_bi_circuito;
 EXECUTE GDD_EXPRESS.migracion_bi_vueltas;
+EXECUTE GDD_EXPRESS.migracion_bi_tiempo
 -- Tablas de hechos
 
 GO
