@@ -15,6 +15,10 @@ GO
 IF OBJECT_ID('GDD_EXPRESS.migracion_bi_auto', 'P') IS NOT NULL
     DROP PROCEDURE GDD_EXPRESS.migracion_bi_auto
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_circuito', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_circuito
+GO
 --------------------------------------------------- 
 -- CHEQUEO DE FUNCIONES
 ---------------------------------------------------
@@ -38,6 +42,10 @@ GO
 
 IF OBJECT_ID('GDD_EXPRESS.BI_Componente', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Componente
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Circuito', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Circuito
 GO
 
 
@@ -77,6 +85,15 @@ FOREIGN KEY (AUTO_ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_I
 )
 GO
 
+CREATE TABLE GDD_EXPRESS.BI_Circuito
+(
+CIRCUITO_ID							int, --PK
+CIRCUITO_NOMBRE						nvarchar(255),
+CIRCUITO_PAIS						nvarchar(255)
+-- duda con la foreing key de auto?	
+PRIMARY KEY (CIRCUITO_ID)
+)
+GO
 
 -- TABLAS DE HECHOS
 
@@ -121,6 +138,14 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_auto AS
     END
 GO
 
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_circuito AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Circuito (circuito_id, circuito_nombre, circuito_pais)
+           SELECT c.CIRCUITO_ID, c.CIRCUITO_NOMBRE, pais.PAIS_DETALLE FROM GDD_EXPRESS.Circuito c
+			JOIN GDD_EXPRESS.Pais pais ON c.CIRCUITO_PAIS_ID = pais.PAIS_ID
+    END
+GO
+
 -- Tablas de hechos
 
 
@@ -134,7 +159,7 @@ GO
 EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
 EXECUTE GDD_EXPRESS.migracion_bi_componentes;
 EXECUTE GDD_EXPRESS.migracion_bi_auto;
-
+EXECUTE GDD_EXPRESS.migracion_bi_circuito;
 -- Tablas de hechos
 
 GO
