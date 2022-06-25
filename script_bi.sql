@@ -4,7 +4,17 @@ GO
 --------------------------------------------------- 
 -- CHEQUEO DE STORED PROCEDURES DEL MODELO BI
 ---------------------------------------------------
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_escuderia', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_escuderia
+GO
 
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_componentes', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_componentes
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_auto', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_auto
+GO
 --------------------------------------------------- 
 -- CHEQUEO DE FUNCIONES
 ---------------------------------------------------
@@ -82,9 +92,6 @@ GO
 ---------------------------------------------------
 
 -- Tablas de dimension
-IF OBJECT_ID('GDD_EXPRESS.migracion_bi_escuderia', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_bi_escuderia
-GO
 
 CREATE PROCEDURE GDD_EXPRESS.migracion_bi_escuderia AS
     BEGIN
@@ -92,11 +99,6 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_escuderia AS
             SELECT es.ESCUDERIA_ID, es.ESCUDERIA_NOMBRE, pais.PAIS_DETALLE FROM GDD_EXPRESS.Escuderia es
 			JOIN GDD_EXPRESS.Pais pais ON es.ESCUDERIA_PAIS_ID = pais.PAIS_ID
     END
-GO
-
-
-IF OBJECT_ID('GDD_EXPRESS.migracion_bi_componentes', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_bi_componentes
 GO
 
 CREATE PROCEDURE GDD_EXPRESS.migracion_bi_componentes AS
@@ -112,16 +114,14 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_componentes AS
     END
 GO
 
-IF OBJECT_ID('GDD_EXPRESS.migracion_bi_auto', 'P') IS NOT NULL
-    DROP PROCEDURE GDD_EXPRESS.migracion_bi_auto
-GO
-
 CREATE PROCEDURE GDD_EXPRESS.migracion_bi_auto AS
     BEGIN
         INSERT INTO GDD_EXPRESS.BI_Auto (auto_id, auto_modelo, auto_escuderia_id, auto_numero)
             SELECT AUTO_ID, AUTO_MODELO, AUTO_ESCUDERIA_ID, AUTO_NUMERO FROM GDD_EXPRESS.Auto
     END
 GO
+
+-- Tablas de hechos
 
 
 ---------------------------------------------------
@@ -134,6 +134,7 @@ GO
 EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
 EXECUTE GDD_EXPRESS.migracion_bi_componentes;
 EXECUTE GDD_EXPRESS.migracion_bi_auto;
+
 -- Tablas de hechos
 
 GO
