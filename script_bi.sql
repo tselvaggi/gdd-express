@@ -19,6 +19,10 @@ GO
 IF OBJECT_ID('GDD_EXPRESS.migracion_bi_circuito', 'P') IS NOT NULL
     DROP PROCEDURE GDD_EXPRESS.migracion_bi_circuito
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_vueltas', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_vueltas
+GO
 --------------------------------------------------- 
 -- CHEQUEO DE FUNCIONES
 ---------------------------------------------------
@@ -86,7 +90,6 @@ AUTO_ID							int, --PK
 AUTO_MODELO						nvarchar(255),
 AUTO_ESCUDERIA_ID				int, --FK
 AUTO_NUMERO						int
--- duda con la foreing key de auto?	
 PRIMARY KEY (AUTO_ID)
 FOREIGN KEY (AUTO_ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID)
 )
@@ -103,15 +106,11 @@ GO
 
 CREATE TABLE GDD_EXPRESS.BI_Vuelta
 (
-VUELTA_ID							int, --PK
-VUELTA_NUMERO						nvarchar(255),
+VUELTA_ID							int IDENTITY(1,1), --PK
+VUELTA_NUMERO						decimal(18,0),
 PRIMARY KEY (VUELTA_ID)
 )
 GO
-
--- -----> FALTA STORE PROCEDURE VUELTA
-
-
 
 -- TABLAS DE HECHOS
 
@@ -122,18 +121,22 @@ AUTO_ID								int, --FK
 COMPONENTE_ID						int, --FK
 VUELTA_ID							int, --FK
 CIRCUITO_ID							int, --FK
-TIEMPO_ID							int, --FK
+TIEMPO_ID							int --FK
 -- ------> ver si hace falta la pk
 PRIMARY KEY (DESGASTE_ID)
 -- ------> falta crear el tiempo
-FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID)
-FOREIGN KEY (COMPONENTE_ID) REFERENCES GDD_EXPRESS.BI_Componente (COMPONENTE_ID)
+FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID),
+FOREIGN KEY (COMPONENTE_ID) REFERENCES GDD_EXPRESS.BI_Componente (COMPONENTE_ID),
 FOREIGN KEY (CIRCUITO_ID) REFERENCES GDD_EXPRESS.BI_Circuito (CIRCUITO_ID)
 -- ------> falta crear el tiempo
 )
 GO
 
 -- -----> FALTA STORE PROCEDURE DESGASTE
+
+
+
+
 
 ---------------------------------------------------
 -- CREACION DE FUNCIONES
@@ -183,6 +186,14 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_circuito AS
     END
 GO
 
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_vueltas AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Vuelta(VUELTA_NUMERO)
+           SELECT DISTINCT TELE_NUMERO_DE_VUELTA FROM GDD_EXPRESS.Telemetria 
+		   ORDER BY TELE_NUMERO_DE_VUELTA
+    END
+GO
+
 -- Tablas de hechos
 
 
@@ -197,6 +208,7 @@ EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
 EXECUTE GDD_EXPRESS.migracion_bi_componentes;
 EXECUTE GDD_EXPRESS.migracion_bi_auto;
 EXECUTE GDD_EXPRESS.migracion_bi_circuito;
+EXECUTE GDD_EXPRESS.migracion_bi_vueltas;
 -- Tablas de hechos
 
 GO
