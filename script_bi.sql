@@ -31,6 +31,9 @@ GO
 -- CHEQUEO DE TABLAS DEL MODELO BI
 ---------------------------------------------------
 -- Tablas de hechos
+IF OBJECT_ID('GDD_EXPRESS.BI_Desgaste', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Desgaste
+GO
 
 -- Tablas de dimension
 IF OBJECT_ID('GDD_EXPRESS.BI_Auto', 'U') IS NOT NULL
@@ -46,6 +49,10 @@ GO
 
 IF OBJECT_ID('GDD_EXPRESS.BI_Circuito', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Circuito
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Vuelta', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Vuelta
 GO
 
 
@@ -90,13 +97,43 @@ CREATE TABLE GDD_EXPRESS.BI_Circuito
 CIRCUITO_ID							int, --PK
 CIRCUITO_NOMBRE						nvarchar(255),
 CIRCUITO_PAIS						nvarchar(255)
--- duda con la foreing key de auto?	
 PRIMARY KEY (CIRCUITO_ID)
 )
 GO
 
+CREATE TABLE GDD_EXPRESS.BI_Vuelta
+(
+VUELTA_ID							int, --PK
+VUELTA_NUMERO						nvarchar(255),
+PRIMARY KEY (VUELTA_ID)
+)
+GO
+
+-- -----> FALTA STORE PROCEDURE VUELTA
+
+
+
 -- TABLAS DE HECHOS
 
+CREATE TABLE GDD_EXPRESS.BI_Desgaste
+(
+DESGASTE_ID							int IDENTITY(1,1), --PK
+AUTO_ID								int, --FK
+COMPONENTE_ID						int, --FK
+VUELTA_ID							int, --FK
+CIRCUITO_ID							int, --FK
+TIEMPO_ID							int, --FK
+-- ------> ver si hace falta la pk
+PRIMARY KEY (DESGASTE_ID)
+-- ------> falta crear el tiempo
+FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID)
+FOREIGN KEY (COMPONENTE_ID) REFERENCES GDD_EXPRESS.BI_Componente (COMPONENTE_ID)
+FOREIGN KEY (CIRCUITO_ID) REFERENCES GDD_EXPRESS.BI_Circuito (CIRCUITO_ID)
+-- ------> falta crear el tiempo
+)
+GO
+
+-- -----> FALTA STORE PROCEDURE DESGASTE
 
 ---------------------------------------------------
 -- CREACION DE FUNCIONES
