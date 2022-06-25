@@ -19,6 +19,9 @@ GO
 -- Tablas de hechos
 
 -- Tablas de dimension
+IF OBJECT_ID('GDD_EXPRESS.BI_Auto', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Auto
+GO
 IF OBJECT_ID('GDD_EXPRESS.BI_Escuderia', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Escuderia
 GO
@@ -26,6 +29,8 @@ GO
 IF OBJECT_ID('GDD_EXPRESS.BI_Componente', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Componente
 GO
+
+
 --------------------------------------------------- 
 -- CREACION DE TABLAS DEL MODELO BI
 ---------------------------------------------------
@@ -43,10 +48,22 @@ GO
 CREATE TABLE GDD_EXPRESS.BI_Componente
 (
 COMPONENTE_ID					int IDENTITY(1,1), --PK
-COMPONENTE_NRO_SERIE				nvarchar(50),
+COMPONENTE_NRO_SERIE			nvarchar(50),
 COMPONENTE_TIPO					nvarchar(255)
 -- duda con la foreing key de auto?	
 PRIMARY KEY (COMPONENTE_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Auto
+(
+AUTO_ID							int, --PK
+AUTO_MODELO						nvarchar(255),
+AUTO_ESCUDERIA_ID				int, --FK
+AUTO_NUMERO						int
+-- duda con la foreing key de auto?	
+PRIMARY KEY (AUTO_ID)
+FOREIGN KEY (AUTO_ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID)
 )
 GO
 
@@ -95,6 +112,17 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_componentes AS
     END
 GO
 
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_auto', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_auto
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_auto AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Auto (auto_id, auto_modelo, auto_escuderia_id, auto_numero)
+            SELECT AUTO_ID, AUTO_MODELO, AUTO_ESCUDERIA_ID, AUTO_NUMERO FROM GDD_EXPRESS.Auto
+    END
+GO
+
 
 ---------------------------------------------------
 -- EJECUCION DE STORED PROCEDURES
@@ -105,6 +133,7 @@ GO
 -- Tablas de dimensiones
 EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
 EXECUTE GDD_EXPRESS.migracion_bi_componentes;
+EXECUTE GDD_EXPRESS.migracion_bi_auto;
 -- Tablas de hechos
 
 GO
@@ -113,6 +142,7 @@ GO
 -- CREACION DE VISTAS
 ---------------------------------------------------
 --1
+/*
 CREATE VIEW [N&M'S].vw_max_tiempo_fuera_de_servicio AS
     SELECT BOT.camion_id 'camion', TMP.cuatrimestre, MAX(BOT.maximo_tiempo_fuera_servicio) 'maximo_tiempo_fuera_de_servicio'
     FROM [N&M'S].bi_Ordenes_Trabajo BOT
@@ -120,13 +150,14 @@ CREATE VIEW [N&M'S].vw_max_tiempo_fuera_de_servicio AS
     GROUP BY BOT.camion_id, TMP.cuatrimestre
 GO
 
-
+*/
 
 --------------------------------------------------- 
 -- SELECCION DE VISTAS
 ---------------------------------------------------
 
 -- 1
+/*
 SELECT * FROM [N&M'S].vw_max_tiempo_fuera_de_servicio
 
 
@@ -145,3 +176,4 @@ BEGIN
     END
 END
 GO
+*/
