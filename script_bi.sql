@@ -22,6 +22,10 @@ GO
 IF OBJECT_ID('GDD_EXPRESS.BI_Escuderia', 'U') IS NOT NULL
 	DROP TABLE GDD_EXPRESS.BI_Escuderia
 GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Componente', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Componente
+GO
 --------------------------------------------------- 
 -- CREACION DE TABLAS DEL MODELO BI
 ---------------------------------------------------
@@ -33,6 +37,16 @@ ESCUDERIA_ID					int, --PK
 ESCUDERIA_NOMBRE				nvarchar(255),
 ESCUDERIA_PAIS					nvarchar(255)
 PRIMARY KEY (ESCUDERIA_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Componente
+(
+COMPONENTE_ID					int IDENTITY(1,1), --PK
+COMPONENTE_NRO_SERIE				nvarchar(50),
+COMPONENTE_TIPO					nvarchar(255)
+-- duda con la foreing key de auto?	
+PRIMARY KEY (COMPONENTE_ID)
 )
 GO
 
@@ -64,6 +78,23 @@ CREATE PROCEDURE GDD_EXPRESS.migracion_bi_escuderia AS
 GO
 
 
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_componentes', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_componentes
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_componentes AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Componente (componente_nro_serie, componente_tipo)
+            SELECT DISTINCT m.MOTOR_NRO_SERIE, 'MOTOR' FROM GDD_EXPRESS.Motor m
+		INSERT INTO GDD_EXPRESS.BI_Componente (componente_nro_serie, componente_tipo)
+            SELECT DISTINCT c.CAJA_NRO_SERIE, 'CAJA CAMBIOS' FROM GDD_EXPRESS.Caja_Cambios c
+		INSERT INTO GDD_EXPRESS.BI_Componente (componente_nro_serie, componente_tipo)
+            SELECT DISTINCT n.NEUMATICO_NRO_SERIE, 'NEUMATICO' FROM GDD_EXPRESS.Neumatico n
+		INSERT INTO GDD_EXPRESS.BI_Componente (componente_nro_serie, componente_tipo)
+            SELECT DISTINCT f.FRENO_NRO_SERIE, 'FRENO' FROM GDD_EXPRESS.Freno f
+    END
+GO
+
 
 ---------------------------------------------------
 -- EJECUCION DE STORED PROCEDURES
@@ -73,7 +104,7 @@ GO
 
 -- Tablas de dimensiones
 EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
-
+EXECUTE GDD_EXPRESS.migracion_bi_componentes;
 -- Tablas de hechos
 
 GO
