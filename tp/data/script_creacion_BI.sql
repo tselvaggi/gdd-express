@@ -1,0 +1,755 @@
+USE [GD1C2022]
+GO
+
+--------------------------------------------------- 
+-- CHEQUEO DE STORED PROCEDURES DEL MODELO BI
+---------------------------------------------------
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_piloto', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_piloto
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_escuderia', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_escuderia
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_componentes', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_componentes
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_auto', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_auto
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_circuito', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_circuito
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_vueltas', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_vueltas
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_tiempo', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_tiempo
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_tipo_sector', 'P') IS NOT NULL
+    DROP PROCEDURE GDD_EXPRESS.migracion_bi_tipo_sector
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_telemetria', 'P') IS NOT NULL
+	DROP PROCEDURE GDD_EXPRESS.migracion_telemetria
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_paradas', 'P') IS NOT NULL
+	DROP PROCEDURE GDD_EXPRESS.migracion_bi_paradas
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_incidentes', 'P') IS NOT NULL
+	DROP PROCEDURE GDD_EXPRESS.migracion_bi_incidentes
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.migracion_bi_tipo_incidente', 'P') IS NOT NULL
+	DROP PROCEDURE GDD_EXPRESS.migracion_bi_tipo_incidente
+GO
+
+
+--------------------------------------------------- 
+-- CHEQUEO DE FUNCIONES
+---------------------------------------------------
+IF OBJECT_ID('GDD_EXPRESS.fn_cuatrimestre', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_cuatrimestre
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_tiempo_id', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_tiempo_id
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.fn_vuelta_id', 'FN') IS NOT NULL
+	DROP FUNCTION GDD_EXPRESS.fn_vuelta_id
+GO
+
+--------------------------------------------------- 
+-- CHEQUEO DE VISTAS DEL MODELO BI
+---------------------------------------------------
+
+IF OBJECT_ID('GDD_EXPRESS.vw_maxima_velocidad_x_sector_auto', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_maxima_velocidad_x_sector_auto
+
+IF OBJECT_ID('GDD_EXPRESS.vw_desgaste_promedio_por_componente', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_desgaste_promedio_por_componente
+
+IF OBJECT_ID('GDD_EXPRESS.vw_mejor_tiempo_vuelta_escuderia_x_circuito_anio', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_mejor_tiempo_vuelta_escuderia_x_circuito_anio
+
+IF OBJECT_ID('GDD_EXPRESS.vw_top3_circuitos_consumo_combustible', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_top3_circuitos_consumo_combustible	
+
+IF OBJECT_ID('GDD_EXPRESS.vw_tiempo_promedio_cuatrimestral_paradas', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_tiempo_promedio_cuatrimestral_paradas	
+
+IF OBJECT_ID('GDD_EXPRESS.vw_cantidad_paradas_anio_x_circuito_escuderia', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_cantidad_paradas_anio_x_circuito_escuderia
+	
+IF OBJECT_ID('GDD_EXPRESS.vw_top3_circuitos_mayor_tiempo_paradas', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_top3_circuitos_mayor_tiempo_paradas
+
+IF OBJECT_ID('GDD_EXPRESS.vw_promedio_anual_incidentes_x_escuderia', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_promedio_anual_incidentes_x_escuderia
+
+IF OBJECT_ID('GDD_EXPRESS.vw_top3_circuitos_mas_peligrosos', 'V') IS NOT NULL
+	DROP VIEW GDD_EXPRESS.vw_top3_circuitos_mas_peligrosos
+
+--------------------------------------------------- 
+-- CHEQUEO DE TABLAS DEL MODELO BI
+---------------------------------------------------
+-- Tablas de hechos
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Incidentes', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Incidentes
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Paradas', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Paradas
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Telemetria', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Telemetria
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Medicion_Vuelta', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Medicion_Vuelta
+GO
+
+-- Tablas de dimension
+IF OBJECT_ID('GDD_EXPRESS.BI_Piloto', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Piloto
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Auto', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Auto
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Tipo_Incidente', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Tipo_Incidente
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Escuderia', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Escuderia
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Componente', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Componente
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Circuito', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Circuito
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Tipo_Sector', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Tipo_Sector
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Vuelta', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Vuelta
+GO
+
+IF OBJECT_ID('GDD_EXPRESS.BI_Tiempo', 'U') IS NOT NULL
+	DROP TABLE GDD_EXPRESS.BI_Tiempo
+GO
+
+
+--------------------------------------------------- 
+-- CREACION DE TABLAS DEL MODELO BI
+---------------------------------------------------
+
+-- TABLAS DE DIMENSION
+CREATE TABLE GDD_EXPRESS.BI_Escuderia
+(
+ESCUDERIA_ID						int, --PK
+ESCUDERIA_NOMBRE					nvarchar(255),
+ESCUDERIA_PAIS						nvarchar(255)
+PRIMARY KEY (ESCUDERIA_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Componente
+(
+COMPONENTE_ID						int IDENTITY(1,1), --PK
+COMPONENTE_NRO_SERIE				nvarchar(50),
+COMPONENTE_TIPO						nvarchar(255)
+PRIMARY KEY (COMPONENTE_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Tipo_Incidente
+(
+TIPO_INCIDENTE_ID					int, --PK
+TIPO_INCIDENTE_DETALLE				nvarchar(255)
+PRIMARY KEY (TIPO_INCIDENTE_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Auto
+(
+AUTO_ID								int, --PK
+AUTO_MODELO							nvarchar(255),
+AUTO_ESCUDERIA_ID					int, --FK
+AUTO_NUMERO							int
+PRIMARY KEY (AUTO_ID)
+FOREIGN KEY (AUTO_ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Piloto
+(
+PILOTO_ID							int, --PK
+PILOTO_NOMBRE						nvarchar(50),
+PILOTO_APELLIDO						nvarchar(50),
+PILOTO_NACIONALIDAD					nvarchar(255),
+PILOTO_FECHA_NACIMIENTO				date,
+PILOTO_AUTO_ID						int --FK
+PRIMARY KEY (PILOTO_ID)
+FOREIGN KEY (PILOTO_AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Circuito
+(
+CIRCUITO_ID							int, --PK
+CIRCUITO_NOMBRE						nvarchar(255),
+CIRCUITO_PAIS						nvarchar(255)
+PRIMARY KEY (CIRCUITO_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Vuelta
+(
+VUELTA_ID							int IDENTITY(1,1), --PK
+VUELTA_NUMERO						decimal(18,0),
+PRIMARY KEY (VUELTA_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Tipo_Sector
+(
+TIPO_SECTOR_ID						int, --PK
+TIPO_SECTOR_DETALLE					nvarchar(255),
+PRIMARY KEY (TIPO_SECTOR_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Tiempo
+(
+TIEMPO_ID							int IDENTITY(1,1), --PK
+TIEMPO_ANIO							decimal(18,0),
+TIEMPO_CUATRIMESTRE					decimal(18,0),
+PRIMARY KEY (TIEMPO_ID)
+)
+GO
+
+-- TABLAS DE HECHOS
+CREATE TABLE GDD_EXPRESS.BI_Telemetria
+(
+BI_TELEMETRIA_ID					int IDENTITY(1,1), --PK
+AUTO_ID								int, --FK
+ESCUDERIA_ID						int, --FK
+COMPONENTE_ID						int, --FK
+VUELTA_ID							int, --FK
+CIRCUITO_ID							int, --FK
+TIPO_SECTOR_ID						int, --FK
+TIEMPO_ID							int, --FK
+DESGASTE							decimal(18,6),
+TIEMPO_VUELTA						decimal(18,10),
+CONSUMO_COMBUSTIBLE					decimal(18,2),
+MAXIMA_VELOCIDAD					decimal(18,2)
+PRIMARY KEY (BI_TELEMETRIA_ID)
+FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID),
+FOREIGN KEY (ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID),
+FOREIGN KEY (VUELTA_ID) REFERENCES GDD_EXPRESS.BI_Vuelta (VUELTA_ID),
+FOREIGN KEY (COMPONENTE_ID) REFERENCES GDD_EXPRESS.BI_Componente (COMPONENTE_ID),
+FOREIGN KEY (CIRCUITO_ID) REFERENCES GDD_EXPRESS.BI_Circuito (CIRCUITO_ID),
+FOREIGN KEY (TIPO_SECTOR_ID) REFERENCES GDD_EXPRESS.BI_Tipo_Sector (TIPO_SECTOR_ID),
+FOREIGN KEY (TIEMPO_ID) REFERENCES GDD_EXPRESS.BI_Tiempo (TIEMPO_ID)
+)
+GO
+
+
+CREATE TABLE GDD_EXPRESS.BI_Paradas
+(
+BI_PARADAS_ID						int IDENTITY(1,1), --PK
+AUTO_ID								int, --FK
+ESCUDERIA_ID						int, --FK
+CIRCUITO_ID							int, --FK
+TIEMPO_ID							int, --FK
+TIEMPO_BOX							decimal(18,2),
+PRIMARY KEY (BI_PARADAS_ID),
+FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID),
+FOREIGN KEY (ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID),
+FOREIGN KEY (CIRCUITO_ID) REFERENCES GDD_EXPRESS.BI_Circuito (CIRCUITO_ID),
+FOREIGN KEY (TIEMPO_ID) REFERENCES GDD_EXPRESS.BI_Tiempo (TIEMPO_ID)
+)
+GO
+
+CREATE TABLE GDD_EXPRESS.BI_Incidentes
+(
+BI_INCIDENTES_ID					int IDENTITY(1,1), --PK
+AUTO_ID								int, --FK
+ESCUDERIA_ID						int, --FK
+CIRCUITO_ID							int, --FK
+TIPO_SECTOR_ID						int, --FK
+TIPO_INCIDENTE_ID					int, --FK
+TIEMPO_ID							int, --FK
+TOTAL_INCIDENTES_CIRCUITO_ANIO		int,
+TOTAL_INCIDENTES_SECTOR_ANIO		int,
+PRIMARY KEY (BI_INCIDENTES_ID),
+FOREIGN KEY (AUTO_ID) REFERENCES GDD_EXPRESS.BI_Auto (AUTO_ID),
+FOREIGN KEY (ESCUDERIA_ID) REFERENCES GDD_EXPRESS.BI_Escuderia (ESCUDERIA_ID),
+FOREIGN KEY (CIRCUITO_ID) REFERENCES GDD_EXPRESS.BI_Circuito (CIRCUITO_ID),
+FOREIGN KEY (TIPO_SECTOR_ID) REFERENCES GDD_EXPRESS.BI_Tipo_Sector (TIPO_SECTOR_ID),
+FOREIGN KEY (TIPO_INCIDENTE_ID) REFERENCES GDD_EXPRESS.BI_Tipo_Incidente (TIPO_INCIDENTE_ID),
+FOREIGN KEY (TIEMPO_ID) REFERENCES GDD_EXPRESS.BI_Tiempo (TIEMPO_ID)
+)
+GO
+
+
+
+---------------------------------------------------
+-- CREACION DE FUNCIONES
+---------------------------------------------------
+CREATE FUNCTION GDD_EXPRESS.fn_cuatrimestre (@fecha as date)
+RETURNS int
+BEGIN
+	declare @cuatri int
+	SET @cuatri = CASE
+		WHEN MONTH(@fecha) <5 THEN 1
+		WHEN MONTH(@fecha) <9 AND MONTH(@fecha) >=5 THEN  2
+		WHEN MONTH(@fecha) <13 AND MONTH(@fecha) >=9 THEN 3
+    ELSE NULL
+	END
+	RETURN @cuatri
+END
+GO
+
+CREATE FUNCTION GDD_EXPRESS.fn_tiempo_id(@fecha as date)
+RETURNS int
+BEGIN
+	declare @tiempo_id int
+
+	SET @tiempo_id = (SELECT t.TIEMPO_ID FROM GDD_EXPRESS.BI_Tiempo t 
+	WHERE t.TIEMPO_ANIO = YEAR(@fecha) AND t.TIEMPO_CUATRIMESTRE = GDD_EXPRESS.fn_cuatrimestre(@fecha))
+
+	RETURN @tiempo_id
+END
+GO
+
+
+CREATE FUNCTION GDD_EXPRESS.fn_vuelta_id(@nro_vuelta as int)
+RETURNS int
+BEGIN
+	declare @vuelta_id int
+
+	SET @vuelta_id = (SELECT v.VUELTA_ID FROM GDD_EXPRESS.BI_Vuelta v WHERE v.VUELTA_NUMERO = @nro_vuelta)
+
+	RETURN @vuelta_id
+END
+GO
+
+
+--------------------------------------------------- 
+-- CREACION DE STORED PROCEDURES DEL MODELO BI
+---------------------------------------------------
+
+-- Tablas de dimension
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_escuderia AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Escuderia (escuderia_id, escuderia_nombre, escuderia_pais)
+            SELECT es.ESCUDERIA_ID, es.ESCUDERIA_NOMBRE, pais.PAIS_DETALLE 
+			FROM GDD_EXPRESS.Escuderia es
+			JOIN GDD_EXPRESS.Pais pais ON es.ESCUDERIA_PAIS_ID = pais.PAIS_ID
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_auto AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Auto (auto_id, auto_modelo, auto_escuderia_id, auto_numero)
+            SELECT AUTO_ID, AUTO_MODELO, AUTO_ESCUDERIA_ID, AUTO_NUMERO 
+			FROM GDD_EXPRESS.Auto
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_piloto AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Piloto (PILOTO_ID, PILOTO_NOMBRE, PILOTO_APELLIDO, PILOTO_NACIONALIDAD,
+		PILOTO_FECHA_NACIMIENTO, PILOTO_AUTO_ID)
+            SELECT p.PILOTO_ID, p.PILOTO_NOMBRE, p.PILOTO_APELLIDO, pais.PAIS_DETALLE, p.PILOTO_FECHA_NACIMIENTO, p.PILOTO_AUTO_ID
+			FROM GDD_EXPRESS.Piloto p
+			JOIN GDD_EXPRESS.Pais pais ON p.PILOTO_NACIONALIDAD = pais.PAIS_ID
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_tipo_incidente AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Tipo_Incidente(TIPO_INCIDENTE_ID, TIPO_INCIDENTE_DETALLE)
+            SELECT it.INCIDENTE_TIPO_ID, it.INCIDENTE_TIPO_DETALLE 
+			FROM GDD_EXPRESS.Incidente_Tipo it
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_circuito AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Circuito (circuito_id, circuito_nombre, circuito_pais)
+           SELECT c.CIRCUITO_ID, c.CIRCUITO_NOMBRE, pais.PAIS_DETALLE 
+		   FROM GDD_EXPRESS.Circuito c
+		   JOIN GDD_EXPRESS.Pais pais ON c.CIRCUITO_PAIS_ID = pais.PAIS_ID
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_vueltas AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Vuelta(VUELTA_NUMERO)
+           SELECT DISTINCT TELE_NUMERO_DE_VUELTA
+		   FROM GDD_EXPRESS.Telemetria 
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_tipo_sector AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Tipo_Sector(TIPO_SECTOR_ID, TIPO_SECTOR_DETALLE)
+           SELECT s.SECTOR_TIPO_ID, s.SECTOR_TIPO_DETALLE 
+		   FROM GDD_EXPRESS.Sector_Tipo s
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_tiempo AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Tiempo(TIEMPO_ANIO, TIEMPO_CUATRIMESTRE)
+           SELECT distinct YEAR(CARRERA_FECHA), GDD_EXPRESS.fn_cuatrimestre(CARRERA_FECHA) 
+		   FROM GDD_EXPRESS.Carrera
+    END
+GO
+
+-- Tablas de hechos
+CREATE PROCEDURE GDD_EXPRESS.migracion_telemetria AS
+    BEGIN
+
+	declare @bi_componente_id int
+
+	--NEUMATICOS
+	INSERT INTO GDD_EXPRESS.BI_Componente(COMPONENTE_TIPO)
+	VALUES ('NEUMATICO')
+	SET @bi_componente_id = @@IDENTITY
+
+	INSERT INTO GDD_EXPRESS.BI_Telemetria(AUTO_ID, ESCUDERIA_ID, COMPONENTE_ID, VUELTA_ID, CIRCUITO_ID, TIEMPO_ID, DESGASTE)
+	SELECT ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, @bi_componente_id, GDD_EXPRESS.fn_vuelta_id(t.TELE_NUMERO_DE_VUELTA), c.CARRERA_CIRCUITO_ID , GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), 
+		MAX(tn.NEUMATICO_PROFUNDIDAD) - MIN(tn.NEUMATICO_PROFUNDIDAD) 
+		FROM GDD_EXPRESS.Telemetria t
+		JOIN GDD_EXPRESS.Telemetria_Neumatico tn ON t.TELE_ID = tn.TELE_ID
+		JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID 
+		JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID 
+		JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+		WHERE t.TELE_POSICION <> 0
+		GROUP BY t.TELE_NUMERO_DE_VUELTA, c.CARRERA_CIRCUITO_ID, c.CARRERA_FECHA, ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, tn.NEUMATICO_ID
+
+
+	--FRENOS
+	INSERT INTO GDD_EXPRESS.BI_Componente(COMPONENTE_TIPO)
+	VALUES ('FRENO')
+	SET @bi_componente_id = @@IDENTITY
+
+	INSERT INTO GDD_EXPRESS.BI_Telemetria(AUTO_ID, ESCUDERIA_ID, COMPONENTE_ID, VUELTA_ID, CIRCUITO_ID, TIEMPO_ID, DESGASTE)
+	SELECT ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, @bi_componente_id, GDD_EXPRESS.fn_vuelta_id(t.TELE_NUMERO_DE_VUELTA), c.CARRERA_CIRCUITO_ID , GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), 
+		MAX(tf.FRENO_GROSOR_PASTILLA) - MIN(tf.FRENO_GROSOR_PASTILLA) 
+		FROM GDD_EXPRESS.Telemetria t
+		JOIN GDD_EXPRESS.Telemetria_Freno tf ON t.TELE_ID = tf.TELE_ID
+		JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID 
+		JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID 
+		JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+		WHERE t.TELE_POSICION <> 0
+		GROUP BY t.TELE_NUMERO_DE_VUELTA, c.CARRERA_CIRCUITO_ID, c.CARRERA_FECHA, ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, tf.FRENO_ID
+
+	--CAJA CAMBIOS
+	INSERT INTO GDD_EXPRESS.BI_Componente(COMPONENTE_TIPO)
+	VALUES('CAJA CAMBIOS')
+	SET @bi_componente_id = @@IDENTITY
+
+	INSERT INTO GDD_EXPRESS.BI_Telemetria(AUTO_ID, ESCUDERIA_ID, COMPONENTE_ID, VUELTA_ID, CIRCUITO_ID, TIEMPO_ID, DESGASTE)
+	SELECT ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, @bi_componente_id, GDD_EXPRESS.fn_vuelta_id(t.TELE_NUMERO_DE_VUELTA), c.CARRERA_CIRCUITO_ID , GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), 
+		MAX(tcc.CAJA_DESGASTE) - MIN(tcc.CAJA_DESGASTE) 
+		FROM GDD_EXPRESS.Telemetria t
+		JOIN GDD_EXPRESS.Telemetria_Caja_Cambios tcc ON t.TELE_ID = tcc.TELE_ID
+		JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID 
+		JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID 
+		JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+		WHERE t.TELE_POSICION <> 0
+		GROUP BY t.TELE_NUMERO_DE_VUELTA, c.CARRERA_CIRCUITO_ID, c.CARRERA_FECHA, ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, tcc.CAJA_ID
+
+	--MOTOR
+	INSERT INTO GDD_EXPRESS.BI_Componente(COMPONENTE_TIPO)
+	VALUES('MOTOR')
+	SET @bi_componente_id = @@IDENTITY
+
+	INSERT INTO GDD_EXPRESS.BI_Telemetria(AUTO_ID, ESCUDERIA_ID, COMPONENTE_ID, VUELTA_ID, CIRCUITO_ID, TIEMPO_ID, DESGASTE)
+	SELECT ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, @bi_componente_id, GDD_EXPRESS.fn_vuelta_id(t.TELE_NUMERO_DE_VUELTA), c.CARRERA_CIRCUITO_ID , GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), 
+		MAX(tm.MOTOR_POTENCIA) - MIN(tm.MOTOR_POTENCIA) 
+		FROM GDD_EXPRESS.Telemetria t
+		JOIN GDD_EXPRESS.Telemetria_Motor tm ON t.TELE_ID = tm.TELE_ID
+		JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID 
+		JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID 
+		JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+		WHERE t.TELE_POSICION <> 0
+		GROUP BY t.TELE_NUMERO_DE_VUELTA, c.CARRERA_CIRCUITO_ID, c.CARRERA_FECHA, ac.AUTO_ID, a.AUTO_ESCUDERIA_ID, tm.MOTOR_ID
+    END
+
+	--MEJOR TIEMPO DE VUELTA
+
+	DECLARE c_tiempos_combustible CURSOR FOR
+	SELECT a.AUTO_ID, GDD_EXPRESS.fn_vuelta_id(t.TELE_NUMERO_DE_VUELTA), a.AUTO_ESCUDERIA_ID, 
+	GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), c.CARRERA_CIRCUITO_ID, MAX(t.TELE_TIEMPO_DE_VUELTA),  
+	MAX(t.TELE_COMBUSTIBLE) - MIN(t.TELE_COMBUSTIBLE) 
+	FROM GDD_EXPRESS.Telemetria t
+	JOIN GDD_EXPRESS.Sector s ON s.SECTOR_ID = t.TELE_SECTOR_ID
+	JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID
+	JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+	JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+	WHERE t.TELE_POSICION <> 0
+	GROUP BY t.TELE_AUTO_CARRERA_ID, a.AUTO_ID, a.AUTO_ESCUDERIA_ID, c.CARRERA_FECHA, c.CARRERA_CIRCUITO_ID, t.TELE_NUMERO_DE_VUELTA
+
+
+	declare @auto_id int
+	declare @vuelta_id int
+	declare @escuderia_id int
+	declare @tiempo_id int
+	declare @circ_id int
+	declare @tiempo_vuelta decimal(18,10)
+	declare @consumo_combustible decimal(18,2)
+
+	OPEN c_tiempos_combustible
+	FETCH NEXT FROM c_tiempos_combustible INTO @auto_id, @vuelta_id, @escuderia_id, @tiempo_id, @circ_id, @tiempo_vuelta, @consumo_combustible
+	WHILE (@@FETCH_STATUS = 0)
+	BEGIN
+		
+		UPDATE GDD_EXPRESS.BI_Telemetria 
+		SET TIEMPO_VUELTA = @tiempo_vuelta, CONSUMO_COMBUSTIBLE = @consumo_combustible
+		WHERE 
+		AUTO_ID = @auto_id AND
+		ESCUDERIA_ID = @escuderia_id AND
+		VUELTA_ID = @vuelta_id AND
+		TIEMPO_ID = @tiempo_id AND
+		CIRCUITO_ID = @circ_id
+
+		FETCH NEXT FROM c_tiempos_combustible INTO @auto_id, @vuelta_id, @escuderia_id, @tiempo_id, @circ_id, @tiempo_vuelta, @consumo_combustible
+	END
+
+	CLOSE c_tiempos_combustible
+	DEALLOCATE c_tiempos_combustible
+
+	-- MAXIMA VELOCIDAD
+
+	INSERT INTO GDD_EXPRESS.BI_Telemetria(AUTO_ID, CIRCUITO_ID, TIPO_SECTOR_ID, TIEMPO_ID, MAXIMA_VELOCIDAD)
+	SELECT a.AUTO_ID, c.CARRERA_CIRCUITO_ID, s.SECTOR_TIPO_ID, GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), MAX(t.TELE_VELOCIDAD_AUTO) 
+	FROM GDD_EXPRESS.Telemetria t
+	JOIN GDD_EXPRESS.Sector s ON s.SECTOR_ID = t.TELE_SECTOR_ID
+	JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = t.TELE_AUTO_CARRERA_ID
+	JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+	JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+	WHERE t.TELE_POSICION <> 0
+	GROUP BY a.AUTO_ID, c.CARRERA_CIRCUITO_ID, s.SECTOR_TIPO_ID, c.CARRERA_FECHA
+
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_paradas AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Paradas(AUTO_ID, ESCUDERIA_ID, CIRCUITO_ID, TIEMPO_ID, TIEMPO_BOX)
+           SELECT a.AUTO_ID, a.AUTO_ESCUDERIA_ID, c.CARRERA_CIRCUITO_ID, GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA), b.BOX_PARADA_TIEMPO FROM GDD_EXPRESS.Box_Parada b
+			JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = b.BOX_AUTO_CARRERA_ID
+			JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+			JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+    END
+GO
+
+CREATE PROCEDURE GDD_EXPRESS.migracion_bi_incidentes AS
+    BEGIN
+        INSERT INTO GDD_EXPRESS.BI_Incidentes(AUTO_ID, ESCUDERIA_ID, CIRCUITO_ID, TIPO_INCIDENTE_ID, TIPO_SECTOR_ID, TIEMPO_ID)
+           SELECT a.AUTO_ID, a.AUTO_ESCUDERIA_ID, c.CARRERA_CIRCUITO_ID, i.INCIDENTE_TIPO_ID, s.SECTOR_TIPO_ID, GDD_EXPRESS.fn_tiempo_id(c.CARRERA_FECHA) FROM GDD_EXPRESS.Incidente i
+			JOIN GDD_EXPRESS.Incidente_Auto_Carrera iac ON i.INCIDENTE_ID = iac.INCIDENTE_ID
+			JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = iac.INCIDENTE_AUTO_CARRERA_ID
+			JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+			JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+			JOIN GDD_EXPRESS.Sector s ON s.SECTOR_ID = i.INCIDENTE_SECTOR_ID
+    END
+
+	DECLARE c_total_anio_circ CURSOR FOR
+	SELECT c.CARRERA_CIRCUITO_ID, YEAR(c.CARRERA_FECHA), count(distinct i.INCIDENTE_ID) 
+	FROM GDD_EXPRESS.Incidente i
+	JOIN GDD_EXPRESS.Incidente_Auto_Carrera iac ON i.INCIDENTE_ID = iac.INCIDENTE_ID
+	JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = iac.INCIDENTE_AUTO_CARRERA_ID
+	JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+	GROUP BY c.CARRERA_CIRCUITO_ID, YEAR(c.CARRERA_FECHA)
+
+	declare @circ_id int
+	declare @anio int
+	declare @total int
+
+	OPEN c_total_anio_circ
+	FETCH NEXT FROM c_total_anio_circ INTO @circ_id, @anio, @total
+	WHILE (@@FETCH_STATUS = 0)
+	BEGIN
+		
+		UPDATE GDD_EXPRESS.BI_Incidentes
+		SET TOTAL_INCIDENTES_CIRCUITO_ANIO = @total
+		WHERE EXISTS (SELECT 1 FROM GDD_EXPRESS.BI_Tiempo t WHERE t.TIEMPO_ANIO = @anio AND t.TIEMPO_ID = TIEMPO_ID) AND
+		CIRCUITO_ID = @circ_id
+
+		FETCH NEXT FROM c_total_anio_circ INTO @circ_id, @anio, @total
+	END
+
+	CLOSE c_total_anio_circ
+	DEALLOCATE c_total_anio_circ
+
+	INSERT INTO GDD_EXPRESS.BI_Tiempo(TIEMPO_ANIO)
+	VALUES (2020)
+	INSERT INTO GDD_EXPRESS.BI_Tiempo(TIEMPO_ANIO)
+	VALUES (2021)
+
+	
+	INSERT INTO GDD_EXPRESS.BI_Incidentes(ESCUDERIA_ID, TIPO_SECTOR_ID, TIEMPO_ID, TOTAL_INCIDENTES_SECTOR_ANIO)
+	SELECT a.AUTO_ESCUDERIA_ID, s.SECTOR_TIPO_ID, 
+		(SELECT t.TIEMPO_ID 
+			FROM GDD_EXPRESS.BI_Tiempo t 
+			WHERE t.TIEMPO_ANIO = YEAR(c.CARRERA_FECHA) AND t.TIEMPO_CUATRIMESTRE IS NULL
+		),
+		COUNT(distinct i.INCIDENTE_ID) 
+	FROM GDD_EXPRESS.Incidente i
+	JOIN GDD_EXPRESS.Incidente_Auto_Carrera iac ON i.INCIDENTE_ID = iac.INCIDENTE_ID
+	JOIN GDD_EXPRESS.Auto_Carrera ac ON ac.AUTO_CARRERA_ID = iac.INCIDENTE_AUTO_CARRERA_ID
+	JOIN GDD_EXPRESS.Carrera c ON c.CARRERA_ID = ac.CARRERA_ID
+	JOIN GDD_EXPRESS.Auto a ON a.AUTO_ID = ac.AUTO_ID
+	JOIN GDD_EXPRESS.Sector s ON s.SECTOR_ID = i.INCIDENTE_SECTOR_ID
+	GROUP BY a.AUTO_ESCUDERIA_ID, s.SECTOR_TIPO_ID, YEAR(c.CARRERA_FECHA)
+GO
+
+---------------------------------------------------
+-- EJECUCION DE STORED PROCEDURES
+---------------------------------------------------
+PRINT 'Realizando la migracion del modelo BI' + CHAR(13)
+GO
+
+-- Tablas de dimensiones
+EXECUTE GDD_EXPRESS.migracion_bi_tiempo;
+EXECUTE GDD_EXPRESS.migracion_bi_escuderia;
+EXECUTE GDD_EXPRESS.migracion_bi_auto;
+EXECUTE GDD_EXPRESS.migracion_bi_piloto;
+EXECUTE GDD_EXPRESS.migracion_bi_circuito;
+EXECUTE GDD_EXPRESS.migracion_bi_vueltas;
+EXECUTE GDD_EXPRESS.migracion_bi_tipo_sector;
+EXECUTE GDD_EXPRESS.migracion_bi_tipo_incidente;
+
+-- Tablas de hechos
+EXECUTE GDD_EXPRESS.migracion_telemetria;
+EXECUTE GDD_EXPRESS.migracion_bi_paradas;
+EXECUTE GDD_EXPRESS.migracion_bi_incidentes;
+
+GO
+
+--------------------------------------------------- 
+-- CREACION DE VISTAS
+---------------------------------------------------
+--
+
+CREATE VIEW GDD_EXPRESS.vw_desgaste_promedio_por_componente AS
+    SELECT a.AUTO_MODELO, a.AUTO_NUMERO, c.COMPONENTE_TIPO, v.VUELTA_NUMERO, cir.CIRCUITO_NOMBRE, 
+		AVG(d.DESGASTE) AS PROMEDIO_DESGASTE 
+	FROM GDD_EXPRESS.BI_Telemetria d
+	JOIN GDD_EXPRESS.BI_Componente c ON c.COMPONENTE_ID = d.COMPONENTE_ID
+	JOIN GDD_EXPRESS.BI_Auto a ON a.AUTO_ID = d.AUTO_ID
+	JOIN GDD_EXPRESS.BI_Vuelta v ON v.VUELTA_ID = d.VUELTA_ID
+	JOIN GDD_EXPRESS.BI_Circuito cir ON cir.CIRCUITO_ID = d.CIRCUITO_ID
+	GROUP BY d.CIRCUITO_ID, d.VUELTA_ID, v.VUELTA_NUMERO, cir.CIRCUITO_NOMBRE, a.AUTO_MODELO, a.AUTO_NUMERO, c.COMPONENTE_TIPO
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_mejor_tiempo_vuelta_escuderia_x_circuito_anio AS
+    SELECT tele.VUELTA_ID, tele.ESCUDERIA_ID, tele.CIRCUITO_ID, t.TIEMPO_ANIO, 
+		MIN(tele.TIEMPO_VUELTA) AS MEJOR_TIEMPO 
+	FROM GDD_EXPRESS.BI_Telemetria tele
+	JOIN GDD_EXPRESS.BI_Tiempo t ON t.TIEMPO_ID = tele.TIEMPO_ID
+	WHERE tele.VUELTA_ID = 1
+	GROUP BY tele.VUELTA_ID, tele.ESCUDERIA_ID, tele.CIRCUITO_ID, t.TIEMPO_ANIO
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_top3_circuitos_consumo_combustible AS
+    SELECT TOP 3 c.CIRCUITO_NOMBRE, AVG(t.CONSUMO_COMBUSTIBLE) AS CONSUMO_PROMEDIO 
+	FROM GDD_EXPRESS.BI_Telemetria t
+	JOIN GDD_EXPRESS.BI_Circuito c ON c.CIRCUITO_ID = t.CIRCUITO_ID
+	GROUP BY t.CIRCUITO_ID, c.CIRCUITO_NOMBRE
+	ORDER BY AVG(t.CONSUMO_COMBUSTIBLE) DESC
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_maxima_velocidad_x_sector_auto AS
+    SELECT t.AUTO_ID, t.CIRCUITO_ID, t.TIPO_SECTOR_ID, a.AUTO_MODELO, a.AUTO_NUMERO, ts.TIPO_SECTOR_DETALLE, 
+	c.CIRCUITO_NOMBRE, MAX(t.MAXIMA_VELOCIDAD) AS MAX_VELOCIDAD 
+	FROM GDD_EXPRESS.BI_Telemetria t
+	JOIN GDD_EXPRESS.BI_Auto a ON a.AUTO_ID = t.AUTO_ID
+	JOIN GDD_EXPRESS.BI_Tipo_Sector ts ON ts.TIPO_SECTOR_ID = t.TIPO_SECTOR_ID
+	JOIN GDD_EXPRESS.BI_Circuito c ON c.CIRCUITO_ID = t.CIRCUITO_ID
+	WHERE t.TIPO_SECTOR_ID IS NOT NULL
+	GROUP BY t.AUTO_ID, a.AUTO_NUMERO, t.TIPO_SECTOR_ID, t.CIRCUITO_ID, ts.TIPO_SECTOR_DETALLE, a.AUTO_MODELO, c.CIRCUITO_NOMBRE
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_tiempo_promedio_cuatrimestral_paradas AS
+    SELECT t.TIEMPO_ANIO, t.TIEMPO_CUATRIMESTRE, e.ESCUDERIA_NOMBRE, avg(p.TIEMPO_BOX) as TIEMPO_PROMEDIO FROM GDD_EXPRESS.BI_Paradas p
+	JOIN GDD_EXPRESS.BI_Tiempo t ON t.TIEMPO_ID = p.TIEMPO_ID
+	JOIN GDD_EXPRESS.BI_Escuderia e ON e.ESCUDERIA_ID = p.ESCUDERIA_ID
+	GROUP BY t.TIEMPO_CUATRIMESTRE, t.TIEMPO_ANIO, p.ESCUDERIA_ID, e.ESCUDERIA_NOMBRE
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_cantidad_paradas_anio_x_circuito_escuderia AS
+    SELECT t.TIEMPO_ANIO, e.ESCUDERIA_NOMBRE, c.CIRCUITO_NOMBRE, COUNT(*) AS CANTIDAD_PARADAS 
+	FROM GDD_EXPRESS.BI_Paradas p
+	JOIN GDD_EXPRESS.BI_Tiempo t ON t.TIEMPO_ID = p.TIEMPO_ID
+	JOIN GDD_EXPRESS.BI_Escuderia e ON e.ESCUDERIA_ID = p.ESCUDERIA_ID
+	JOIN GDD_EXPRESS.BI_Circuito c ON c.CIRCUITO_ID = p.CIRCUITO_ID
+	GROUP BY t.TIEMPO_ANIO, p.CIRCUITO_ID, c.CIRCUITO_NOMBRE, p.ESCUDERIA_ID, e.ESCUDERIA_NOMBRE
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_top3_circuitos_mayor_tiempo_paradas AS
+    SELECT TOP 3 c.CIRCUITO_NOMBRE, SUM(p.TIEMPO_BOX) AS TOTAL_TIEMPO 
+	FROM GDD_EXPRESS.BI_Paradas p
+	JOIN GDD_EXPRESS.BI_Circuito c ON c.CIRCUITO_ID = p.CIRCUITO_ID
+	GROUP BY p.CIRCUITO_ID, c.CIRCUITO_NOMBRE
+	ORDER BY sum(p.TIEMPO_BOX) DESC
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_promedio_anual_incidentes_x_escuderia AS
+	SELECT e.ESCUDERIA_NOMBRE, ts.TIPO_SECTOR_DETALLE, AVG(i.TOTAL_INCIDENTES_SECTOR_ANIO) AS PROMEDIO_ANUAL 
+	FROM GDD_EXPRESS.BI_Incidentes i
+	JOIN GDD_EXPRESS.BI_Tiempo t ON t.TIEMPO_ID = i.TIEMPO_ID 
+	JOIN GDD_EXPRESS.BI_Escuderia e ON e.ESCUDERIA_ID = i.ESCUDERIA_ID
+	JOIN GDD_EXPRESS.BI_Tipo_Sector ts ON ts.TIPO_SECTOR_ID = i.TIPO_SECTOR_ID
+	GROUP BY i.ESCUDERIA_ID, e.ESCUDERIA_NOMBRE, i.TIPO_SECTOR_ID, ts.TIPO_SECTOR_DETALLE
+GO
+
+CREATE VIEW GDD_EXPRESS.vw_top3_circuitos_mas_peligrosos AS
+	SELECT distinct TOP 3 c.CIRCUITO_NOMBRE, i.TOTAL_INCIDENTES_CIRCUITO_ANIO, t.TIEMPO_ANIO 
+	FROM GDD_EXPRESS.BI_Incidentes i
+	JOIN GDD_EXPRESS.BI_Circuito c ON i.CIRCUITO_ID = c.CIRCUITO_ID
+	JOIN GDD_EXPRESS.BI_Tiempo t ON t.TIEMPO_ID = i.TIEMPO_ID
+	ORDER BY i.TOTAL_INCIDENTES_CIRCUITO_ANIO DESC
+GO
+
+
+
+--------------------------------------------------- 
+-- SELECCION DE VISTAS
+---------------------------------------------------
+/*
+SELECT * FROM GDD_EXPRESS.vw_desgaste_promedio_por_componente
+SELECT * FROM GDD_EXPRESS.vw_mejor_tiempo_vuelta_escuderia_x_circuito_anio
+SELECT * FROM GDD_EXPRESS.vw_top3_circuitos_consumo_combustible
+SELECT * FROM GDD_EXPRESS.vw_maxima_velocidad_x_sector_auto
+SELECT * FROM GDD_EXPRESS.vw_tiempo_promedio_cuatrimestral_paradas
+SELECT * FROM GDD_EXPRESS.vw_cantidad_paradas_anio_x_circuito_escuderia
+SELECT * FROM GDD_EXPRESS.vw_top3_circuitos_mayor_tiempo_paradas
+SELECT * FROM GDD_EXPRESS.vw_promedio_anual_incidentes_x_escuderia
+SELECT * FROM GDD_EXPRESS.vw_top3_circuitos_mas_peligrosos
+*/

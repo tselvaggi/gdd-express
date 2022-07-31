@@ -1,0 +1,7 @@
+- Curso:  K3151
+- Número de grupo: 40
+-  Nombre y legajo de todos los integrantes:
+	- Selvaggi, Tomás - 1716086
+	- Frioli, Florencia - 1524203
+                   - Maiolo, Joaquín - 1728489
+- Email del integrante responsable del grupo: tselvaggi@frba.utn.edu.ar
